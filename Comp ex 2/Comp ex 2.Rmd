@@ -32,6 +32,35 @@ We let $y_i$ be the number of successfull ascents, and $n_i$ be the total number
 
 where $x_i$ is a $p$ dimensional column vector of covariates for observation $i$, and $\beta$ is the vector of regression parameters.
 
+# Part 2: Poisson regression - Eliteserien 2018
+
+## a)
+```{r, echo = F, eval = T}
+filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/eliteserien2018"
+eliteserie <- read.table(file = filepath, header = TRUE, colClasses = c("character", 
+    "character", "numeric", "numeric"))
+head(eliteserie)
+dim(eliteserie)
+contingency = matrix(rep(0,25),nrow = 5, ncol = 5)
+rownames(contingency) = c("0","1","2","3","4+")
+colnames(contingency) = c("0","1","2","3","4+")
+print(contingency[eliteserie[2,3],eliteserie[2,4]])
+
+for (i in 1:192){
+  if (eliteserie[i,3]<4 & eliteserie[i,4]<4){
+    contingency[eliteserie[i,3]+1,eliteserie[i,4]+1] = contingency[eliteserie[i,3]+1,eliteserie[i,4]+1]+1
+  }  else if (eliteserie[i,3]<4 & !eliteserie[i,4]<4){
+    contingency[eliteserie[i,3]+1,5] = contingency[eliteserie[i,3]+1,5] + 1
+  }  else if (!eliteserie[i,3]<4 & eliteserie[i,4]<4){
+    contingency[5,eliteserie[i,4]+1] = contingency[5, eliteserie[i,4]+1] + 1
+  }  else{
+    contingency[5,5] = contingency[5,5] + 1
+  }
+}
+
+
+```
+
 
 
 
