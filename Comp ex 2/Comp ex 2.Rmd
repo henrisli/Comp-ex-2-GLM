@@ -35,16 +35,14 @@ where $x_i$ is a $p$ dimensional column vector of covariates for observation $i$
 # Part 2: Poisson regression - Eliteserien 2018
 
 ## a)
+We want to test if the assumption of independence between the goals made by the home and away teams is reasonable. To do this, we first load the data set and make a contingency table of all the results, with the goals of the home team on the rows, and goals of the away team on the columns. We get the following contingency table.
 ```{r, echo = F, eval = T}
 filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/eliteserien2018"
 eliteserie <- read.table(file = filepath, header = TRUE, colClasses = c("character", 
     "character", "numeric", "numeric"))
-head(eliteserie)
-dim(eliteserie)
 contingency = matrix(rep(0,25),nrow = 5, ncol = 5)
 rownames(contingency) = c("0","1","2","3","4+")
 colnames(contingency) = c("0","1","2","3","4+")
-print(contingency[eliteserie[2,3],eliteserie[2,4]])
 
 for (i in 1:192){
   if (eliteserie[i,3]<4 & eliteserie[i,4]<4){
@@ -57,11 +55,16 @@ for (i in 1:192){
     contingency[5,5] = contingency[5,5] + 1
   }
 }
-
+print(contingency)
 
 ```
 
+We then want to test if the number of goals for home and away team are independent. 
 
+```{r, echo = F, eval = T}
+
+
+```
 
 
 
