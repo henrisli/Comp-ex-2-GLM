@@ -59,13 +59,14 @@ print(contingency)
 
 ```
 
-We then want to test if the number of goals for home and away team are independent. 
+We then want to test if the number of goals for home and away team are independent. We do this by conducting _Pearson's_ $\chi^2$ _test_ on the contingency table. The test poses the following hypotheses
+$$H_0: \text{The sampling distributions are independently chi-squared distributed}, \quad H_1: \text{They are not independently chi-squared distributed}.$$
 
 ```{r, echo = F, eval = T}
-
-
+Xsq <- chisq.test(contingency)
+print(Xsq)
 ```
-
+We get a value of $14.146$ for the test statistic, with a corresponding p-value of 0.5871. As this p-value is above any reasonable significance level, we keep the null hypothesis, and confirm that the goals scored by the home and away team are independent.
 
 
 
