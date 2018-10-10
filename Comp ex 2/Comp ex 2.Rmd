@@ -1,17 +1,17 @@
 --- 
-title: "TMA4315: Compulsory exercise 2 Logistic regression and Poisson regression" 
-subtitle: "Group XX: Henrik Syversveen Lie, Mikal Solberg Stapnes and Oliver Byhring" 
-date: "`r format(Sys.time(), '%d.%m.%Y')`" # the current date, can be regular text as well
-output: # 3rd letter intentation hierarchy
-  #html_document:
-  #  toc: true
-  #  toc_float: true
-  #  toc_depth: 2
-   pdf_document:
-    toc: false
+title: 'TMA4315: Compulsory exercise 2 Logistic regression and Poisson regression'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    toc: yes
     toc_depth: 2
-
+    toc_float: yes
+date: "`r format(Sys.time(), '%d.%m.%Y')`"
+subtitle: 'Group XX: Henrik Syversveen Lie, Mikal Stapnes, Oliver Byhring'
 ---
+
 
 ```{r setup, include = FALSE}
 library(formatR)
@@ -20,38 +20,20 @@ library(knitr)
 opts_chunk$set(tidy.opts = list(width.cutoff = 68), tidy = TRUE, warning = FALSE, error = FALSE, message = FALSE, echo = TRUE)
 ```
 
-# Part 1
-
-**Bold**
-
-_italic_
-
-To get a pdf file, make comments of the lines with the "html_document" information, and make the lines with the "pdf_document" information regular, and vice versa.
+# Part 1: Logistic regression
 
 ## a)
 
-Your answer for part 1a)
+We let $y_i$ be the number of successfull ascents, and $n_i$ be the total number of attempts (success + fail) of the i'th mountain. We then do binary regression with the logit link to model the probability of success. This gives
 
-```{r}
-# some R code for part 1a)
-library(ggplot2)
-ggplot(data.frame(x = 1:10, Group = rep(c("A", "B"), 5)), aes(x = x, y = x, col = Group)) + geom_point() + theme_bw()
-```
+1. Model for response: $Y_i \sim \text{Bin}(n_i,\pi_i), \quad \text{for } i = 1,\dots,113$
+2. Linear predictor: $\eta_i = {\bf x} _i^T \beta$
+3. Link function: $\eta_i = \ln(\frac{\pi_i}{1-\pi_i})$
 
-The following is a numbered list:
+where $x_i$ is a $p$ dimensional column vector of covariates for observation $i$, and $\beta$ is the vector of regression parameters.
 
-1. First
-2. Second
-3. Third
 
-And this is an unnumbered list:
 
-* GLM
-* rocks
-
-Equations can be made like this:
-
-$$\bf{Y} = \bf{X} \bf{\beta} + \bf{\varepsilon}$$
 
 
 
