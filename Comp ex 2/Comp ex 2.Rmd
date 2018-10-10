@@ -44,7 +44,7 @@ contingency = matrix(rep(0,25),nrow = 5, ncol = 5)
 rownames(contingency) = c("0","1","2","3","4+")
 colnames(contingency) = c("0","1","2","3","4+")
 
-for (i in 1:192){
+for (i in 1:dim(eliteserie)[1]){
   if (eliteserie[i,3]<4 & eliteserie[i,4]<4){
     contingency[eliteserie[i,3]+1,eliteserie[i,4]+1] = contingency[eliteserie[i,3]+1,eliteserie[i,4]+1]+1
   }  else if (eliteserie[i,3]<4 & !eliteserie[i,4]<4){
@@ -84,7 +84,7 @@ ranking = data.frame(
   Points = rep(0,16),
   stringsAsFactors = FALSE)
 
-for (i in 1:192){
+for (i in 1:dim(eliteserie)[1]){
   # First add number of matches played for both home team
   ranking[match(eliteserie[i,1], ranking[,1]),2] = ranking[match(eliteserie[i,1], ranking[,1]),2] + 1
   # and for the away team
@@ -118,6 +118,87 @@ row.names(ranking) <- seq(1,16)
 print(ranking)
 ```
 
+
+## c)
+
+```{r, echo = F, eval = T}
+X = matrix(0, nrow = dim(eliteserie)[1]*2, ncol = 18)
+colnames(X) = c("Intercept", "HomeAdvantage", "Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "BodoeGlimt", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "Sarpsborg08")
+
+# First we alter the design matrix for all home teams
+for (i in 1:dim(eliteserie)[1]){
+  # Intercept
+  X[i,1] = 1
+  
+  # Home team gets x_home = 1
+  X[i,2] = 1
+  
+  # x_home is set to 1
+  X[i, match(eliteserie[i,1], dimnames(X)[[2]])] = 1
+  
+  # x_away is set to -1
+  X[i, match(eliteserie[i,2], dimnames(X)[[2]])] = -1
+}
+
+# Then alter design matrix for all away teams
+for (i in 1:dim(eliteserie)[1]){
+  # Intercept
+  X[dim(eliteserie)[1] + i,1] = 1
+  
+  # Away team, so x_home = 0
+  
+  # x_home is set to -1
+  X[dim(eliteserie)[1] + i, match(eliteserie[i,1], dimnames(X)[[2]])] = -1
+  
+  # x_away is set to 1
+  X[dim(eliteserie)[1] + i, match(eliteserie[i,2], dimnames(X)[[2]])] = 1
+}
+
+# And we now have the desired design matrix
+
+# We then make the response vector
+goals = c(eliteserie[,3], eliteserie[,4])
+
+# Finally we create the function that does the regression
+myglm <- function(formula, data = list(), contrasts = NULL, ...){
+  
+  # Extract model matrix & responses
+  mf <- model.frame(formula = formula, data = data)
+  X  <- model.matrix(attr(mf, "terms"), data = mf, contrasts.arg = contrasts)
+  y  <- model.response(mf)
+  terms <- attr(mf, "terms")
+
+  # Add code here to calculate coefficients, residuals, fitted values, etc...
+  # and store the results in the list est
+  est <- list(terms = terms, model = mf)
+
+  # Store call and formula used
+  est$call <- match.call()
+  est$formula <- formula
+
+  # Store information used for model fit
+  est$X <- X
+  est$y <- y
+  
+  #Fit model (using optim function in r)
+  est$initial <- rep(0,18)
+  est$fcn <- function(coeff){
+    return(-y%*%X%*%coeff + sum(exp(X%*%coeff)))
+  }
+  est$coefficients = optim(est$initial, est$fcn, method = "BFGS", hessian = TRUE)
+  
+  return(est$coefficients)
+}
+
+coeff <- myglm(goals~ -1 + X)
+print(coeff$par)
+
+coeff$par[3:17] = coeff$par[3:17] - coeff$par[18]
+coeff$par[18] = NA
+print(coeff$par)
+summary(glm(goals ~ -1 + X, family = "poisson"))
+
+```
 
 
 
