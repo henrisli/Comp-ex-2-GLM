@@ -69,7 +69,54 @@ print(Xsq)
 We get a value of $14.146$ for the test statistic, with a corresponding p-value of 0.5871. As this p-value is above any reasonable significance level, we keep the null hypothesis, and confirm that the goals scored by the home and away team are independent.
 
 
+## b)
+We now make the current standings in the Eliteserie based on all the results in our data set, and get the following table.
+```{r, echo = F, eval = T}
+ranking = data.frame(
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "BodoeGlimt", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "Sarpsborg08"), 
+  Played = rep(0,16),
+  Won = rep(0,16),
+  Drawn = rep(0,16),
+  Lost = rep(0,16),
+  For = rep(0,16),
+  Against = rep(0,16),
+  GD = rep(0,16),
+  Points = rep(0,16),
+  stringsAsFactors = FALSE)
 
+for (i in 1:192){
+  # First add number of matches played for both home team
+  ranking[match(eliteserie[i,1], ranking[,1]),2] = ranking[match(eliteserie[i,1], ranking[,1]),2] + 1
+  # and for the away team
+  ranking[match(eliteserie[i,2], ranking[,1]),2] = ranking[match(eliteserie[i,2], ranking[,1]),2] + 1
+  
+  # Then add goals for and against home team
+  ranking[match(eliteserie[i,1], ranking[,1]),6] = ranking[match(eliteserie[i,1], ranking[,1]),6] + eliteserie[i,3]
+  ranking[match(eliteserie[i,1], ranking[,1]),7] = ranking[match(eliteserie[i,1], ranking[,1]),7] + eliteserie[i,4]
+  # and for and against away team
+  ranking[match(eliteserie[i,2], ranking[,1]),6] = ranking[match(eliteserie[i,2], ranking[,1]),6] + eliteserie[i,4]
+  ranking[match(eliteserie[i,2], ranking[,1]),7] = ranking[match(eliteserie[i,2], ranking[,1]),7] + eliteserie[i,3]
+  
+  # Then count wins, draws and losses for home team
+  ranking[match(eliteserie[i,1], ranking[,1]),3] = ranking[match(eliteserie[i,1], ranking[,1]),3] + as.numeric(eliteserie[i,3]>eliteserie[i,4])
+  ranking[match(eliteserie[i,1], ranking[,1]),4] = ranking[match(eliteserie[i,1], ranking[,1]),4] + as.numeric(eliteserie[i,3]==eliteserie[i,4])
+  ranking[match(eliteserie[i,1], ranking[,1]),5] = ranking[match(eliteserie[i,1], ranking[,1]),5] + as.numeric(eliteserie[i,4]>eliteserie[i,3])
+  
+  # Finally count wins, draws and losses for away team
+  ranking[match(eliteserie[i,2], ranking[,1]),3] = ranking[match(eliteserie[i,2], ranking[,1]),3] + as.numeric(eliteserie[i,3]<eliteserie[i,4])
+  ranking[match(eliteserie[i,2], ranking[,1]),4] = ranking[match(eliteserie[i,2], ranking[,1]),4] + as.numeric(eliteserie[i,3]==eliteserie[i,4])
+  ranking[match(eliteserie[i,2], ranking[,1]),5] = ranking[match(eliteserie[i,2], ranking[,1]),5] + as.numeric(eliteserie[i,4]<eliteserie[i,3])
+}
+# Points is computed by 3 points for win, 1 for draw and 0 for loss
+ranking[,9] = 3*ranking[,3] + ranking[,4]
+# Goal difference is goals scored minus goals conceded
+ranking[,8] = ranking[,6] - ranking[,7]
+# We rank the teams first by points, then goal difference, finally by goals scored
+ranking = ranking[order(ranking$Points, ranking$GD, ranking$For, decreasing = T),]
+# Rename rows after sorting
+row.names(ranking) <- seq(1,16)
+print(ranking)
+```
 
 
 
