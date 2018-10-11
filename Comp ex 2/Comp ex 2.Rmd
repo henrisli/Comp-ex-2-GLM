@@ -59,7 +59,7 @@ print(contingency)
 
 ```
 
-We then want to test if the number of goals for home and away team are independent. We do this by conducting _Pearson's_ $\chi^2$ _test_ on the contingency table. The test poses the following hypotheses
+We then want to test if the number of goals for home and away team are independent. We do this by conducting _Pearson's_ $\chi^2$ _test_ on the contingency table. The test poses the following hypotheses (SPØR OM DETTE ER RIKTIG HYPOTESE)
 $$H_0: \text{The sampling distributions are independently chi-squared distributed}, \quad H_1: \text{They are not independently chi-squared distributed}.$$
 
 ```{r, echo = F, eval = T}
@@ -73,7 +73,7 @@ We get a value of $14.146$ for the test statistic, with a corresponding p-value 
 We now make the current standings in the Eliteserie based on all the results in our data set, and get the following table.
 ```{r, echo = F, eval = T}
 ranking = data.frame(
-  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "BodoeGlimt", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "Sarpsborg08"), 
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"), 
   Played = rep(0,16),
   Won = rep(0,16),
   Drawn = rep(0,16),
@@ -123,7 +123,7 @@ print(ranking)
 
 ```{r, echo = F, eval = T}
 X = matrix(0, nrow = dim(eliteserie)[1]*2, ncol = 18)
-colnames(X) = c("Intercept", "HomeAdvantage", "Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "BodoeGlimt", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "Sarpsborg08")
+colnames(X) = c("Intercept", "HomeAdvantage", "Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt")
 
 # First we alter the design matrix for all home teams
 for (i in 1:dim(eliteserie)[1]){
@@ -191,14 +191,107 @@ myglm <- function(formula, data = list(), contrasts = NULL, ...){
 }
 
 coeff <- myglm(goals~ -1 + X)
-print(coeff$par)
 
+# Find relative strength by setting Bodø Glimt to 0
 coeff$par[3:17] = coeff$par[3:17] - coeff$par[18]
-coeff$par[18] = NA
-print(coeff$par)
+coeff$par[18] = 0
+
+powerRanking = data.frame(
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
+  Power = coeff$par[3:18],
+  stringsAsFactors = FALSE)
+
+
+# Sort after strength
+powerRanking = powerRanking[order(powerRanking$Power, decreasing = T),]
+# Rename rows after sorting
+row.names(powerRanking) <- seq(1,16)
+
+print(powerRanking)
+
+compareableRanking = data.frame(
+  Power = powerRanking[,1],
+  Ranking = ranking[,1],
+  stringsAsFactors = FALSE)
+row.names(compareableRanking) <- seq(1,16)
+print(compareableRanking)
+
 summary(glm(goals ~ -1 + X, family = "poisson"))
 
 ```
+
+## d)
+
+
+```{r, echo = F, eval = T}
+# Load the unplayed matches
+filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/unplayed2018"
+eliteserieUnplayed <- read.table(file = filepath, header = TRUE, colClasses = c("character", 
+    "character"))
+
+# Add columns for goals in each match
+eliteserieUnplayed$yh = rep(0,dim(eliteserieUnplayed)[1])
+eliteserieUnplayed$ya = rep(0,dim(eliteserieUnplayed)[1])
+
+
+#Play the remaining matches
+for (i in 1:dim(eliteserieUnplayed)[1]){
+  eliteserieUnplayed[i,3] = rpois(1,exp(coeff$par[1]+coeff$par[2] + powerRanking[match(eliteserieUnplayed[i,1], powerRanking$Team),2] - powerRanking[match(eliteserieUnplayed[i,2], powerRanking$Team),2]))
+  eliteserieUnplayed[i,4] = rpois(1,exp(coeff$par[1] + powerRanking[match(eliteserieUnplayed[i,2], powerRanking$Team),2] - powerRanking[match(eliteserieUnplayed[i,1], powerRanking$Team),2]))
+}
+eliteserieFinished = rbind(eliteserie, eliteserieUnplayed)
+
+rankingFinal = data.frame(
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
+  Played = rep(0,16),
+  Won = rep(0,16),
+  Drawn = rep(0,16),
+  Lost = rep(0,16),
+  For = rep(0,16),
+  Against = rep(0,16),
+  GD = rep(0,16),
+  Points = rep(0,16),
+  stringsAsFactors = FALSE)
+
+for (i in 1:dim(eliteserieFinished)[1]){
+  # First add number of matches played for both home team
+  rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),2] = rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),2] + 1
+  # and for the away team
+  rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),2] = rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),2] + 1
+
+  # Then add goals for and against home team
+  rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),6] = rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),6] + eliteserieFinished[i,3]
+  rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),7] = rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),7] + eliteserieFinished[i,4]
+  # and for and against away team
+  rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),6] = rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),6] + eliteserieFinished[i,4]
+  rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),7] = rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),7] + eliteserieFinished[i,3]
+
+  # Then count wins, draws and losses for home team
+  rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),3] = rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),3] + as.numeric(eliteserieFinished[i,3]>eliteserieFinished[i,4])
+  rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),4] = rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),4] + as.numeric(eliteserieFinished[i,3]==eliteserieFinished[i,4])
+  rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),5] = rankingFinal[match(eliteserieFinished[i,1], rankingFinal[,1]),5] + as.numeric(eliteserieFinished[i,4]>eliteserieFinished[i,3])
+
+  # Finally count wins, draws and losses for away team
+  rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),3] = rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),3] + as.numeric(eliteserieFinished[i,3]<eliteserieFinished[i,4])
+  rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),4] = rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),4] + as.numeric(eliteserieFinished[i,3]==eliteserieFinished[i,4])
+  rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),5] = rankingFinal[match(eliteserieFinished[i,2], rankingFinal[,1]),5] + as.numeric(eliteserieFinished[i,4]<eliteserieFinished[i,3])
+}
+# Points is computed by 3 points for win, 1 for draw and 0 for loss
+rankingFinal[,9] = 3*rankingFinal[,3] + rankingFinal[,4]
+# Goal difference is goals scored minus goals conceded
+rankingFinal[,8] = rankingFinal[,6] - rankingFinal[,7]
+# We rank the teams first by points, then goal difference, finally by goals scored
+rankingFinal = rankingFinal[order(rankingFinal$Points, rankingFinal$GD, rankingFinal$For, decreasing = T),]
+# Rename rows after sorting
+row.names(rankingFinal) <- seq(1,16)
+print(rankingFinal)
+
+```
+
+
+
+
+
 
 
 
