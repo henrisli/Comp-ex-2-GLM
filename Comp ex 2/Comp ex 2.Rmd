@@ -330,30 +330,13 @@ rankingAverage = data.frame(
 #Number of times each team placed in each place
 numPlace = data.frame(
   Team = c("Rosenborg", "Brann", "Molde", "Haugesund", "Ranheim_TF", "Vaalerenga", "Odd", "Tromsoe", "Sarpsborg08", "Kristiansund", "Stroemsgodset", "BodoeGlimt", "Lillestroem", "Stabaek", "Start", "Sandefjord_Fotball"),
-    One = rep(0,16),
-    Two = rep(0,16),
-    Three = rep(0,16),
-    Four = rep(0,16),
-    Five = rep(0,16),
-    Six = rep(0,16),
-    Seven = rep(0,16),
-    Eight = rep(0,16),
-    Nine = rep(0,16),
-    Ten = rep(0,16),
-    Eleven = rep(0,16),
-    Twelve = rep(0,16),
-    Thirteen = rep(0,16),
-    Fourteen = rep(0,16),
-    Fifteen = rep(0,16),
-    Sixteen = rep(0,16),
+    One = rep(0,16), Two = rep(0,16), Three = rep(0,16), Four = rep(0,16), Five = rep(0,16), Six = rep(0,16), Seven = rep(0,16), Eight = rep(0,16), Nine = rep(0,16), Ten = rep(0,16), Eleven = rep(0,16), Twelve = rep(0,16), Thirteen = rep(0,16), Fourteen = rep(0,16), Fifteen = rep(0,16), Sixteen = rep(0,16),
     stringsAsFactors = FALSE)
 
-print(numPlace)
 
-placings = data.frame(Rosenborg = rep(0,1000),
-Brann = rep(0,1000),
-Molde = rep(0,1000),
-Haugesund = rep(0,1000), Ranheim_TF = rep(0,1000), Vaalerenga = rep(0,1000), Odd = rep(0,1000), Tromsoe = rep(0,1000), Sarpsborg08 = rep(0,1000), Kristiansund = rep(0,1000), Stroemsgodset = rep(0,1000), BodoeGlimt = rep(0,1000), Lillestroem = rep(0,1000), Stabaek = rep(0,1000), Start = rep(0,1000), Sandefjord_Fotball = rep(0,1000))
+placings = data.frame(Rosenborg = rep(0,1000), Brann = rep(0,1000), Molde = rep(0,1000), Haugesund = rep(0,1000), Ranheim_TF = rep(0,1000), Vaalerenga = rep(0,1000), Odd = rep(0,1000), Tromsoe = rep(0,1000), Sarpsborg08 = rep(0,1000), Kristiansund = rep(0,1000), Stroemsgodset = rep(0,1000), BodoeGlimt = rep(0,1000), Lillestroem = rep(0,1000), Stabaek = rep(0,1000), Start = rep(0,1000), Sandefjord_Fotball = rep(0,1000))
+
+points = data.frame(Rosenborg = rep(0,1000), Brann = rep(0,1000), Molde = rep(0,1000), Haugesund = rep(0,1000), Ranheim_TF = rep(0,1000), Vaalerenga = rep(0,1000), Odd = rep(0,1000), Tromsoe = rep(0,1000), Sarpsborg08 = rep(0,1000), Kristiansund = rep(0,1000), Stroemsgodset = rep(0,1000), BodoeGlimt = rep(0,1000), Lillestroem = rep(0,1000), Stabaek = rep(0,1000), Start = rep(0,1000), Sandefjord_Fotball = rep(0,1000))
 
 
 # Average the table over all the simulations:
@@ -362,6 +345,7 @@ for (i in 1:1000){
   cur = data[[i]]
   for (j in 1:16){
     placings[i,match(cur[j,1],colnames(placings))] = j
+    points[i,match(cur[j,1],colnames(points))] = cur[j,9]
     numPlace[match(cur[j,1], numPlace[,1]),j+1] = numPlace[match(cur[j,1], numPlace[,1]),j+1] + 1
     rankingAverage[match(cur[j,1], rankingAverage[,1]),3] = rankingAverage[match(cur[j,1], rankingAverage[,1]),3] + cur[j,3]/1000
     rankingAverage[match(cur[j,1], rankingAverage[,1]),4] = rankingAverage[match(cur[j,1], rankingAverage[,1]),4] + cur[j,4]/1000
@@ -378,10 +362,11 @@ rankingAverage = rankingAverage[order(rankingAverage$Points, rankingAverage$GD, 
 # Rename rows after sorting
 row.names(rankingAverage) <- seq(1,16)
 
+rankingAverage[,2:9] = round(rankingAverage[,2:9],1)
 
+head(points)
 print(rankingAverage)
 print(numPlace)
-head(placings)
 
 ```
 
@@ -394,11 +379,48 @@ ggplot(numPlace, aes(x = seq(1:16))) + geom_line(aes(y = t(numPlace[1,2:17]), co
 ```
 
 ```{r, echo = F, eval = T}
-ggplot(placings, aes(x = seq(1:16))) + geom_bar(aes(y = placings[1]))
+require(gridExtra)
+plot1 <- ggplot(placings, aes(placings[,1])) + geom_bar() + labs(x = "Place", title = colnames(placings)[1])
+plot2 <- ggplot(placings, aes(placings[,2])) + geom_bar() + labs(x = "Place", title = colnames(placings)[2])
+plot3 <- ggplot(placings, aes(placings[,3])) + geom_bar() + labs(x = "Place", title = colnames(placings)[3])
+plot4 <- ggplot(placings, aes(placings[,4])) + geom_bar() + labs(x = "Place", title = colnames(placings)[4])
+plot5 <- ggplot(placings, aes(placings[,5])) + geom_bar() + labs(x = "Place", title = colnames(placings)[5])
+plot6 <- ggplot(placings, aes(placings[,6])) + geom_bar() + labs(x = "Place", title = colnames(placings)[6])
+plot7 <- ggplot(placings, aes(placings[,7])) + geom_bar() + labs(x = "Place", title = colnames(placings)[7])
+plot8 <- ggplot(placings, aes(placings[,8])) + geom_bar() + labs(x = "Place", title = colnames(placings)[8])
+plot9 <- ggplot(placings, aes(placings[,9])) + geom_bar() + labs(x = "Place", title = colnames(placings)[9])
+plot10 <- ggplot(placings, aes(placings[,10])) + geom_bar() + labs(x = "Place", title = colnames(placings)[10])
+plot11 <- ggplot(placings, aes(placings[,11])) + geom_bar() + labs(x = "Place", title = colnames(placings)[11])
+plot12 <- ggplot(placings, aes(placings[,12])) + geom_bar() + labs(x = "Place", title = colnames(placings)[12])
+plot13 <- ggplot(placings, aes(placings[,13])) + geom_bar() + labs(x = "Place", title = colnames(placings)[13])
+plot14 <- ggplot(placings, aes(placings[,14])) + geom_bar() + labs(x = "Place", title = colnames(placings)[14])
+plot15 <- ggplot(placings, aes(placings[,15])) + geom_bar() + labs(x = "Place", title = colnames(placings)[15])
+plot16 <- ggplot(placings, aes(placings[,16])) + geom_bar() + labs(x = "Place", title = colnames(placings)[16])
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, plot11, plot12, plot13, plot14, plot15, plot16, ncol=4)
 ```
 
 
+```{r, echo = F, eval = T}
+require(gridExtra)
+plot1 <- ggplot(points, aes(points[,1])) + geom_bar() + labs(x = "Points", title = colnames(points)[1])
+plot2 <- ggplot(points, aes(points[,2])) + geom_bar() + labs(x = "Points", title = colnames(points)[2])
+plot3 <- ggplot(points, aes(points[,3])) + geom_bar() + labs(x = "Points", title = colnames(points)[3])
+plot4 <- ggplot(points, aes(points[,4])) + geom_bar() + labs(x = "Points", title = colnames(points)[4])
+plot5 <- ggplot(points, aes(points[,5])) + geom_bar() + labs(x = "Points", title = colnames(points)[5])
+plot6 <- ggplot(points, aes(points[,6])) + geom_bar() + labs(x = "Points", title = colnames(points)[6])
+plot7 <- ggplot(points, aes(points[,7])) + geom_bar() + labs(x = "Points", title = colnames(points)[7])
+plot8 <- ggplot(points, aes(points[,8])) + geom_bar() + labs(x = "Points", title = colnames(points)[8])
+plot9 <- ggplot(points, aes(points[,9])) + geom_bar() + labs(x = "Points", title = colnames(points)[9])
+plot10 <- ggplot(points, aes(points[,10])) + geom_bar() + labs(x = "Points", title = colnames(points)[10])
+plot11 <- ggplot(points, aes(points[,11])) + geom_bar() + labs(x = "Points", title = colnames(points)[11])
+plot12 <- ggplot(points, aes(points[,12])) + geom_bar() + labs(x = "Points", title = colnames(points)[12])
+plot13 <- ggplot(points, aes(points[,13])) + geom_bar() + labs(x = "Points", title = colnames(points)[13])
+plot14 <- ggplot(points, aes(points[,14])) + geom_bar() + labs(x = "Points", title = colnames(points)[14])
+plot15 <- ggplot(points, aes(points[,15])) + geom_bar() + labs(x = "Points", title = colnames(points)[15])
+plot16 <- ggplot(points, aes(points[,16])) + geom_bar() + labs(x = "Points", title = colnames(points)[16])
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, plot11, plot12, plot13, plot14, plot15, plot16, ncol=4)
 
+```
 
 
 
