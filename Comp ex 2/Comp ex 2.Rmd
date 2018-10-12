@@ -35,15 +35,23 @@ where $x_i$ is a $p$ dimensional column vector of covariates for observation $i$
 # Part 2: Poisson regression - Eliteserien 2018
 
 ## a)
-We want to test if the assumption of independence between the goals made by the home and away teams is reasonable. To do this, we first load the data set and make a contingency table of all the results, with the goals of the home team on the rows, and goals of the away team on the columns. We get the following contingency table.
+In this Part, we aim to simulate the remaining games in the Norwegian top division of football (Eliteserien). For each game, we assume that the score (the number of goals) of the home team is independent of the score of the away team. We assume that each team has a single parameter that measures its strength. We denote this strength parameter $\beta_A$ for team A, $\beta_B$ for team B, and so on.
+
+Through watching football games, one could be made to believe that the goals scored by the away team in a football match is dependent on the goals scored by the home team and vice versa.
+
+We therefore want to test if the assumption of independence between the goals scored by the home and away teams is reasonable. To do this, we first load the data set and make a contingency table of all the results, with the goals of the home team on the rows, and goals of the away team on the columns. We get the following contingency table.
 ```{r, echo = F, eval = T}
+# Load results of matches
 filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/eliteserien2018"
 eliteserie <- read.table(file = filepath, header = TRUE, colClasses = c("character", 
     "character", "numeric", "numeric"))
+
+# Initialize contingency table 
 contingency = matrix(rep(0,25),nrow = 5, ncol = 5)
 rownames(contingency) = c("0","1","2","3","4+")
 colnames(contingency) = c("0","1","2","3","4+")
 
+# Compute values of the contingency table
 for (i in 1:dim(eliteserie)[1]){
   if (eliteserie[i,3]<4 & eliteserie[i,4]<4){
     contingency[eliteserie[i,3]+1,eliteserie[i,4]+1] = contingency[eliteserie[i,3]+1,eliteserie[i,4]+1]+1
@@ -55,35 +63,31 @@ for (i in 1:dim(eliteserie)[1]){
     contingency[5,5] = contingency[5,5] + 1
   }
 }
+# Finally print the contingency table
 print(contingency)
-
 ```
 
-We then want to test if the number of goals for home and away team are independent. We do this by conducting _Pearson's_ $\chi^2$ _test_ on the contingency table. The test poses the following hypotheses (SPØR OM DETTE ER RIKTIG HYPOTESE)
-$$H_0: \text{The sampling distributions are independently chi-squared distributed}, \quad H_1: \text{They are not independently chi-squared distributed}.$$
+We then want to test if the number of goals for home and away team are independent. We do this by conducting _Pearson's_ $\chi^2$ _test_ on the contingency table. The test poses the following hypotheses
+$$H_0: \text{The sampling distributions are independently chi-squared distributed},\\ H_1: \text{They are not independently chi-squared distributed}.$$
 
+We use the `R` function `chisq.test()` to compute the test statistic and the corresponding p-value.
 ```{r, echo = F, eval = T}
 Xsq <- chisq.test(contingency)
 print(Xsq)
 ```
-We get a value of $14.146$ for the test statistic, with a corresponding p-value of 0.5871. As this p-value is above any reasonable significance level, we keep the null hypothesis, and confirm that the goals scored by the home and away team are independent.
 
+We get a value of $14.156$ for the test statistic, with a corresponding p-value of $0.5871$. As this p-value is above any reasonable significance level, we keep the null hypothesis, and confirm that the goals scored by the home and away team are independent. This means that our assumption of independence holds.
 
 ## b)
-We now make the current standings in the Eliteserie based on all the results in our data set, and get the following table.
+
+Before we start simulating games, we want to construct the current standings in the Eliteserie based on all the results in our data set. By summing up the results from all games, we get the following table.
 ```{r, echo = F, eval = T}
+# Initialize the current standings (ranking) for the teams
 ranking = data.frame(
-  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"), 
-  Played = 0,
-  Won = 0,
-  Drawn = 0,
-  Lost = 0,
-  For = 0,
-  Against = 0,
-  GD = 0,
-  Points = 0,
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"), Played = 0, Won = 0, Drawn = 0, Lost = 0, For = 0, Against = 0, GD = 0, Points = 0,
   stringsAsFactors = FALSE)
 
+# Compute the standings by summing up over all matches
 for (i in 1:dim(eliteserie)[1]){
   # First add number of matches played for both home team
   ranking[match(eliteserie[i,1], ranking[,1]),2] = ranking[match(eliteserie[i,1], ranking[,1]),2] + 1
@@ -115,17 +119,21 @@ ranking[,8] = ranking[,6] - ranking[,7]
 ranking = ranking[order(ranking$Points, ranking$GD, ranking$For, decreasing = T),]
 # Rename rows after sorting
 row.names(ranking) <- seq(1,16)
+# Display the standings
 print(ranking)
 ```
 
 
 ## c)
 
+We now want to estimate the intercept, home advantage and strength parameters for each team. Then we produce a ranking based on the estimated strengths and compare with the rankings from b). To estimate the parameters, we create our own function `myglm` that performs the regression by maximum likelihood. The function uses the built in `optim` function to find the coefficients that maximizes the loglikelihood function (minimizes the negative of the loglikelihood, $-l(\beta)$).
+
 ```{r, echo = F, eval = T}
+# Initialize the design matrix X, which is a 2*192 x 18 matrix.
 X = matrix(0, nrow = dim(eliteserie)[1]*2, ncol = 18)
 colnames(X) = c("Intercept", "HomeAdvantage", "Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt")
 
-# First we alter the design matrix for all home teams
+# First we alter the design matrix for all "home games"
 for (i in 1:dim(eliteserie)[1]){
   # Intercept
   X[i,1] = 1
@@ -133,30 +141,30 @@ for (i in 1:dim(eliteserie)[1]){
   # Home team gets x_home = 1
   X[i,2] = 1
   
-  # x_home is set to 1
+  # x_homeTeam is set to 1
   X[i, match(eliteserie[i,1], dimnames(X)[[2]])] = 1
   
-  # x_away is set to -1
+  # x_awayTeam is set to -1
   X[i, match(eliteserie[i,2], dimnames(X)[[2]])] = -1
 }
 
-# Then alter design matrix for all away teams
+# Then alter design matrix for all "away games"
 for (i in 1:dim(eliteserie)[1]){
   # Intercept
   X[dim(eliteserie)[1] + i,1] = 1
   
   # Away team, so x_home = 0
   
-  # x_home is set to -1
+  # x_homeTeam is set to -1
   X[dim(eliteserie)[1] + i, match(eliteserie[i,1], dimnames(X)[[2]])] = -1
   
-  # x_away is set to 1
+  # x_awayTeam is set to 1
   X[dim(eliteserie)[1] + i, match(eliteserie[i,2], dimnames(X)[[2]])] = 1
 }
 
 # And we now have the desired design matrix
 
-# We then make the response vector
+# We then make the response vector (first all home goals, then all away goals)
 goals = c(eliteserie[,3], eliteserie[,4])
 
 # Finally we create the function that does the regression
@@ -180,54 +188,99 @@ myglm <- function(formula, data = list(), contrasts = NULL, ...){
   est$X <- X
   est$y <- y
   
-  #Fit model (using optim function in r)
+  # Fit model (using optim function in r)
+  # Initial guess is just 0
   est$initial <- rep(0,18)
+  # Function returns -maximum likelihood
   est$fcn <- function(coeff){
     return(-y%*%X%*%coeff + sum(exp(X%*%coeff)))
   }
+  
+  # Use optim function to estimate coefficients
   est$coefficients = optim(est$initial, est$fcn, method = "BFGS", hessian = TRUE)
   
+  # We only need to return the coefficients from the regression
   return(est$coefficients)
 }
 
+# Conduct the regression
 coeff <- myglm(goals~ -1 + X)
 
 # Find relative strength by setting Bodø Glimt to 0
 coeff$par[3:17] = coeff$par[3:17] - coeff$par[18]
 coeff$par[18] = 0
 
-powerRanking = data.frame(
+# Create a strength ranking based on the calculated coefficients
+strengthRanking = data.frame(
   Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
-  Power = coeff$par[3:18],
+  Strength = coeff$par[3:18],
   stringsAsFactors = FALSE)
 
 
 # Sort after strength
-powerRanking = powerRanking[order(powerRanking$Power, decreasing = T),]
+strengthRanking = strengthRanking[order(strengthRanking$Strength, decreasing = T),]
 # Rename rows after sorting
-row.names(powerRanking) <- seq(1,16)
+row.names(strengthRanking) <- seq(1,16)
 
-print(powerRanking)
+# Print the strength ranking
+print(strengthRanking)
+# Print intercept and home advantage
 print("Intercept: ")
 print(coeff$par[1])
 print("Home advantage: ")
 print(coeff$par[2])
 
+# Compare with the results from the built in function glm
+summary(glm(goals ~ -1 + X, family = "poisson"))
+```
+
+If we compare the results from our function `myglm` with the built-in function `glm`, we see that the regression coefficients are equal (to a precision of 4 digits).
+
+We have set the strength of Bodø Glimt to zero, $\beta_{BodoeGlimt} = 0$. This means that the strength of Bodø Glimt is the "reference strength", and the strength of every team is just the team's strength compared to Bodø Glimt. This mean that all teams with $\beta_A >0$ will be stronger than Bodø Glimt, and all teams with $\beta_A <0$ will be weaker than Bodø Glimt. Also, a higher (lower) value of $\beta_A$ indicates a stronger (weaker) team.
+
+We get a coefficient for the intercept of $\beta_{Intercept} = 0.1003129$. This means that, if the teams are equally good (equal strength coefficient), one would expect the away team to score $\exp(\beta_{Intercept}) = 1.11$ goals on average. The coefficient for the home advantage is $\beta_{HomeAdvantage} = 0.4020541$. This means that, if the teams are equally good, one would expect the home team to score $\exp(\beta_{Intercept} + \beta_{HomeAdvantage}) = 1.65$ goals on average. This also means that teams are expected to score $\exp(\beta_{HomeAdvantage}) = 1.49$ times as many goals in home games as in away games.
+
+Also, we see that Rosenborg has the significantly highest coefficient, and Sandefjord has the significantly lowest coefficient. This is what we would expect, seeing as they have been the best and worst team this season.
+
+Now we want to compare the strength coefficient ranking with the actual ranking from the season so far. We therefore print the two rankings side by side.
+```{r, echo = F, eval = T}
+# Compare the calculated strength ranking with the current standings
 compareableRanking = data.frame(
-  Power = powerRanking[,1],
+  Strength = strengthRanking[,1],
   Ranking = ranking[,1],
   stringsAsFactors = FALSE)
 row.names(compareableRanking) <- seq(1,16)
 print(compareableRanking)
-
-summary(glm(goals ~ -1 + X, family = "poisson"))
-
 ```
 
-DISCUSS THE RESULTS FROM THIS TASK
+From the comparison, we get some really interesting results. Based on the strength ranking, we can say that teams that are higher on the actual ranking have "overachieved", while teams that are lower on the actual ranking have "underachieved".
+
+Ranheim_TF is the stand out overachiever, placing in 11th on the strength ranking, and 5th on the actual ranking. One reason for this overachievement may be that Ranheim often win by only small scores, e.g. 1-0, while they lose with big scores, e.g. the scores on some of their losses were: 4-0, 4-0, 3-0, 4-1 and 3-1.
+
+We also see that Brann and Molde have changed places on the actual ranking compared to the strength ranking. Again, this can be due to Brann winning by small scores, and losing by large scores, while Molde often wins by large scores and lose by small scores, e.g. some of Molde's wins have been: 5-0, 4-0, 3-0, 5-1 and 5-1.
+
+Other "overachievers" are Vålerenga and Bodø Glimt, while the "underachievers" are Odd, Tromsø, Sarpsborg 08 and Strømsgodset.
+
+One final thought: If our explanation for why some teams "over"- and "underachieve" is correct (that they lose/win by small and large margins), then the strength ranking should be similar to a ranking based on goal difference. We therefore make a comparison between strength ranking and goal difference ranking.
+```{r, echo = F, eval = T}
+# We make a ranking based on goal difference.
+rankingGD = ranking[order(ranking$GD, ranking$For, decreasing = T),]
+# And compare it to the strength ranking.
+compareableRanking2 = data.frame(
+  Strength = strengthRanking[,1],
+  Ranking = rankingGD[,1],
+  stringsAsFactors = FALSE)
+row.names(compareableRanking2) <- seq(1,16)
+print(compareableRanking2)
+```
+
+We see that all teams are now in the same place, except for a permutation of the teams Vålerenga, Kristiansund, Ranheim and Bodø Glimt. All these teams except Kristiansund have a goal difference of -2, and Kristiansund has a goal difference of -3, so their goal differences are almost equal. All in all, there may be some truth to our explanation.
 
 ## d)
 
+Finally, we want to investigate rankings by means of simulation instead of comparing estimated strength. To do this, we use the estimated strengths of each team, the intercept and the home advantage, and simulate  the remaining games in the current season 1000 times.
+
+In each of the 1000 simulations, we get the goals for the home team in each match, by drawing a random variable from the poisson distribution with parameter $\lambda_H = \exp(\beta_{Intercept} + \beta_{HomeAdvantage} + \beta_{HomeTeam} - \beta_{AwayTeam})$. Similarly, the goals of the away team in each match is drawn from a poisson distribution with parameter $\lambda_A = \exp(\beta_{Intercept} - \beta_{HomeTeam} + \beta_{AwayTeam})$. When all matches are "played", the final ranking is computed based on the current ranking plus the newly simulated games. The 1000 final rankings are stored in a .rds file. In this way we can load the results, instead of running the simulation multiple times.
 
 ```{r, echo = F, eval = T}
 # Load the unplayed matches
@@ -239,14 +292,15 @@ eliteserieUnplayed <- read.table(file = filepath, header = TRUE, colClasses = c(
 eliteserieUnplayed$yh = rep(0,dim(eliteserieUnplayed)[1])
 eliteserieUnplayed$ya = rep(0,dim(eliteserieUnplayed)[1])
 
+# Initialize list to store final rankings
 fotball <- list()
 
+# Function to simulate one season
 simseason <- function(){
+  
   #Play the remaining matches
-  eliteserieUnplayed[,3] = rpois(dim(eliteserieUnplayed)[1],exp(coeff$par[1]+coeff$par[2] + powerRanking[match(eliteserieUnplayed[,1], powerRanking$Team),2] - powerRanking[match(eliteserieUnplayed[,2], powerRanking$Team),2]))
-  eliteserieUnplayed[,4] = rpois(dim(eliteserieUnplayed)[1],exp(coeff$par[1] - powerRanking[match(eliteserieUnplayed[,1], powerRanking$Team),2] + powerRanking[match(eliteserieUnplayed[,2], powerRanking$Team),2]))
-  
-  
+  eliteserieUnplayed[,3] = rpois(dim(eliteserieUnplayed)[1],exp(coeff$par[1]+coeff$par[2] + strengthRanking[match(eliteserieUnplayed[,1], strengthRanking$Team),2] - strengthRanking[match(eliteserieUnplayed[,2], strengthRanking$Team),2]))
+  eliteserieUnplayed[,4] = rpois(dim(eliteserieUnplayed)[1],exp(coeff$par[1] - strengthRanking[match(eliteserieUnplayed[,1], strengthRanking$Team),2] + strengthRanking[match(eliteserieUnplayed[,2], strengthRanking$Team),2]))
   
   # Make the final ranking by starting with the matches already played
   rankingFinal <- ranking
@@ -282,14 +336,18 @@ simseason <- function(){
   return(rankingFinal)
 }
 
+# To reproduce results
 set.seed(4315)
+# Simulate the remaining games 1000 times
 # for (i in 1:1000){
 #  fotball[[i]] <- simseason()
 # }
 
+# Save the data
 #saveRDS(fotball, file = "Simulering.rds")
 ```
 
+After simulating the 48 remaining games 1000 times, we want to do some inference on the final results.
 
 ```{r, echo = F, eval = T}
 
@@ -298,14 +356,7 @@ data = readRDS(file = "Simulering.rds")
 
 rankingAverage <- data.frame(
     Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
-    Played = 30,
-    Won = 0,
-    Drawn = 0,
-    Lost = 0,
-    For = 0,
-    Against = 0,
-    GD = 0,
-    Points = 0,
+    Played = 30, Won = 0, Drawn = 0, Lost = 0, For = 0, Against = 0, GD = 0, Points = 0,
     stringsAsFactors = FALSE)
 
 #Number of times each team placed in each place
@@ -394,4 +445,14 @@ for (i in 1:16){
 confidence_intervals[,2:5] = round(confidence_intervals[,2:5],1)
 print(confidence_intervals)
 ```
+
+
+```{r, echo = F, eval = T}
+# Plot boxplot of points for each team to compare points of each team
+boxplot(points)
+```
+
+
+
+
 
