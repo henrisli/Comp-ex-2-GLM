@@ -347,7 +347,7 @@ set.seed(4315)
 #saveRDS(fotball, file = "Simulering.rds")
 ```
 
-After simulating the 48 remaining games 1000 times, we want to do some inference on the final results.
+After simulating the 48 remaining games 1000 times, we want to do some inference on the final results. We first investigate the "average final ranking", that is, the average points, goals, wins etc. for each team. In addition, we look at how many times each team has placed in each place.
 
 ```{r, echo = F, eval = T}
 
@@ -397,21 +397,25 @@ row.names(rankingAverage) <- seq(1,16)
 # Round to 1 decimal
 rankingAverage[,2:9] = round(rankingAverage[,2:9],1)
 
-head(points)
 print(rankingAverage)
-print(numPlace)
-
 ```
 
-```{r,echo=F,eval=T}
-library("ggplot2")
-library("reshape2")
-
-ggplot(numPlace, aes(x = seq(1:16))) + geom_line(aes(y = t(numPlace[1,2:17]), colour = numPlace[1,1])) + geom_line(aes(y = t(numPlace[2,2:17]), colour = numPlace[2,1])) + geom_line(aes(y = t(numPlace[3,2:17]), colour = numPlace[3,1])) + geom_line(aes(y = t(numPlace[4,2:17]), colour = numPlace[4,1])) + geom_line(aes(y = t(numPlace[5,2:17]), colour = numPlace[5,1])) + geom_line(aes(y = t(numPlace[6,2:17]), colour = numPlace[6,1])) + geom_line(aes(y = t(numPlace[7,2:17]), colour = numPlace[7,1])) + geom_line(aes(y = t(numPlace[8,2:17]), colour = numPlace[8,1])) + geom_line(aes(y = t(numPlace[9,2:17]), colour = numPlace[9,1])) + geom_line(aes(y = t(numPlace[10,2:17]), colour = numPlace[10,1])) + geom_line(aes(y = t(numPlace[11,2:17]), colour = numPlace[11,1])) + geom_line(aes(y = t(numPlace[12,2:17]), colour = numPlace[12,1])) + geom_line(aes(y = t(numPlace[13,2:17]), colour = numPlace[13,1])) + geom_line(aes(y = t(numPlace[14,2:17]), colour = numPlace[14,1])) + geom_line(aes(y = t(numPlace[15,2:17]), colour = numPlace[15,1])) + geom_line(aes(y = t(numPlace[16,2:17]), colour = numPlace[16,1])) + labs(x = "Place", y = "Number of placings")
-
-```
+From the average rating, we see that Rosenborg win the Eliteserie by a margin of $\sim6$ points on average. Brann claims silver, and Molde bronze. Sandefjord ends bottom with a margin of $\sim8$ points, with Start also getting relegated and Stabaek claiming the play-off place. Ranheim (surprisingly) claim 5th place with a negative goal difference.
 
 ```{r, echo = F, eval = T}
+# Print number of placings for each team
+print(numPlace)
+```
+
+We see that Rosenborg win the Eliteserie with $90.1\%$ probability, with Brann having $9.4\%$ and Molde having $0.5\%$ chance of winning. Also, Rosenborg get a medal in every simulation. Brann also claim a medal with $98.9\%$ probability, with silver being the most likely result at $75\%$ probability. Moreover, Molde gets bronze with $68.2\%$ probability. Other teams with a chance of claiming a medal are Haugesund ($17\%$), Ranheim ($1\%$), Vålerenga ($0.1\%$) and Odd ($0.1\%$).
+
+In the other end of the table, Sandefjord end bottom with $97\%$ probability, managing a play-off place with only $0.3\%$ probability. Start get relegated with $63.4\%$ probability, manage play-off with $22.3\%$ probability, and secure their place in the Eliteserie with a probability of $14.3\%$. Interestingly, in one simulation Start managed to get all the way up to 9th! Stabæk get relegated with a probability of $21.4\%$, managing play-off with probability $37.8\%$, and safe ground with probability $40.8\%$. Other teams in danger of relegation/play-off are Lillestrøm ($13\%$/$30.1\%$), Bodø Glimt ($1.5\%$/$5.6\%$) and Strømsgodset ($1\%$/$3.9\%$).
+
+Based on the from these placings, we make barcharts for the placings of each team.
+
+```{r, echo = F, eval = T}
+library("ggplot2")
+library("reshape2")
 # Plot the placings of each team in a barchart
 placingsplot <- melt(placings)
 ggplot(placingsplot, aes(x = value)) + geom_bar() + facet_wrap(~variable)
