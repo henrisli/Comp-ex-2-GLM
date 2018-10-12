@@ -268,7 +268,7 @@ rankingGD = ranking[order(ranking$GD, ranking$For, decreasing = T),]
 # And compare it to the strength ranking.
 compareableRanking2 = data.frame(
   Strength = strengthRanking[,1],
-  Ranking = rankingGD[,1],
+  RankingGD = rankingGD[,1],
   stringsAsFactors = FALSE)
 row.names(compareableRanking2) <- seq(1,16)
 print(compareableRanking2)
@@ -350,10 +350,10 @@ set.seed(4315)
 After simulating the 48 remaining games 1000 times, we want to do some inference on the final results. We first investigate the "average final ranking", that is, the average points, goals, wins etc. for each team. In addition, we look at how many times each team has placed in each place.
 
 ```{r, echo = F, eval = T}
-
-
+# Load the data
 data = readRDS(file = "Simulering.rds")
 
+# Initialize ranking table with average rankings
 rankingAverage <- data.frame(
     Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
     Played = 30, Won = 0, Drawn = 0, Lost = 0, For = 0, Against = 0, GD = 0, Points = 0,
@@ -365,27 +365,27 @@ numPlace = data.frame(
     One = 0, Two = 0, Three = 0, Four = 0, Five = 0, Six = 0, Seven = 0, Eight = 0, Nine = 0, Ten = 0, Eleven = 0, Twelve = 0, Thirteen = 0, Fourteen = 0, Fifteen = 0, Sixteen = 0,
     stringsAsFactors = FALSE)
 
+# Initialize list of placings for each team
+placings = data.frame(Rosenborg = rep(0,1000), Brann = 0, Molde = 0, Haugesund = 0, Ranheim_TF = 0, Vaalerenga = 0, Odd = 0, Tromsoe = 0, Sarpsborg08 = 0, Kristiansund = 0, Stroemsgodset = 0, BodoeGlimt = 0, Lillestroem = 0, Stabaek = 0, Start = 0, Sandefjord_Fotball = 0)
 
-placings = data.frame(Rosenborg = rep(0,1000), Brann = rep(0,1000), Molde = rep(0,1000), Haugesund = rep(0,1000), Ranheim_TF = rep(0,1000), Vaalerenga = rep(0,1000), Odd = rep(0,1000), Tromsoe = rep(0,1000), Sarpsborg08 = rep(0,1000), Kristiansund = rep(0,1000), Stroemsgodset = rep(0,1000), BodoeGlimt = rep(0,1000), Lillestroem = rep(0,1000), Stabaek = rep(0,1000), Start = rep(0,1000), Sandefjord_Fotball = rep(0,1000))
+# Initialize list of points for each team
+points = data.frame(Rosenborg = rep(0,1000), Brann = 0, Molde = 0, Haugesund = 0, Ranheim_TF = 0, Vaalerenga = 0, Odd = 0, Tromsoe = 0, Sarpsborg08 = 0, Kristiansund = 0, Stroemsgodset = 0, BodoeGlimt = 0, Lillestroem = 0, Stabaek = 0, Start = 0, Sandefjord_Fotball = 0)
 
-points = data.frame(Rosenborg = rep(0,1000), Brann = rep(0,1000), Molde = rep(0,1000), Haugesund = rep(0,1000), Ranheim_TF = rep(0,1000), Vaalerenga = rep(0,1000), Odd = rep(0,1000), Tromsoe = rep(0,1000), Sarpsborg08 = rep(0,1000), Kristiansund = rep(0,1000), Stroemsgodset = rep(0,1000), BodoeGlimt = rep(0,1000), Lillestroem = rep(0,1000), Stabaek = rep(0,1000), Start = rep(0,1000), Sandefjord_Fotball = rep(0,1000))
-
-
-# Average the table over all the simulations:
-# And calculate number of times each team placed in each place
+# List the place for each team in each simulation
+# List the points for each team in each simulation
+# And calculate number of times each team placed in each place:
+# Average the final ranking over all the simulations:
 for (i in 1:1000){
   cur = data[[i]]
   for (j in 1:16){
+    # Add the placing of each team
     placings[i,match(cur[j,1],colnames(placings))] = j
+    # Add the points of each team
     points[i,match(cur[j,1],colnames(points))] = cur[j,9]
+    # Find number of placings for each team
     numPlace[match(cur[j,1], numPlace[,1]),j+1] = numPlace[match(cur[j,1], numPlace[,1]),j+1] + 1
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),3] = rankingAverage[match(cur[j,1], rankingAverage[,1]),3] + cur[j,3]/1000
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),4] = rankingAverage[match(cur[j,1], rankingAverage[,1]),4] + cur[j,4]/1000
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),5] = rankingAverage[match(cur[j,1], rankingAverage[,1]),5] + cur[j,5]/1000
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),6] = rankingAverage[match(cur[j,1], rankingAverage[,1]),6] + cur[j,6]/1000
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),7] = rankingAverage[match(cur[j,1], rankingAverage[,1]),7] + cur[j,7]/1000
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),8] = rankingAverage[match(cur[j,1], rankingAverage[,1]),8] + cur[j,8]/1000
-    rankingAverage[match(cur[j,1], rankingAverage[,1]),9] = rankingAverage[match(cur[j,1], rankingAverage[,1]),9] + cur[j,9]/1000
+    # Average the final ranking
+    rankingAverage[match(cur[j,1], rankingAverage[,1]),3:9] = rankingAverage[match(cur[j,1], rankingAverage[,1]),3:9] + cur[j,3:9]/1000
   }
 }
 
@@ -400,7 +400,7 @@ rankingAverage[,2:9] = round(rankingAverage[,2:9],1)
 print(rankingAverage)
 ```
 
-From the average rating, we see that Rosenborg win the Eliteserie by a margin of $\sim6$ points on average. Brann claims silver, and Molde bronze. Sandefjord ends bottom with a margin of $\sim8$ points, with Start also getting relegated and Stabaek claiming the play-off place. Ranheim (surprisingly) claim 5th place with a negative goal difference.
+From the average rating, we see that Rosenborg win the Eliteserie by a margin of $\approx 6$ points on average. Brann claims silver, and Molde bronze. Sandefjord ends bottom with a margin of $\approx 8$ points, with Start also getting relegated and Stabæk claiming the play-off place. Ranheim (surprisingly) claim 5th place with a negative goal difference. We also see that the table is (almost) unchanged after simulating the remaining 48 games. The only difference is that Strømsgodset overtake Bodø Glimt.
 
 ```{r, echo = F, eval = T}
 # Print number of placings for each team
@@ -421,6 +421,7 @@ placingsplot <- melt(placings)
 ggplot(placingsplot, aes(x = value)) + geom_bar() + facet_wrap(~variable)
 ```
 
+We also make a histogram of the points acquired by each team.
 
 ```{r, echo = F, eval = T}
 # Plot the points of each team in a histogram
@@ -428,11 +429,12 @@ pointsplot <- melt(points)
 ggplot(pointsplot, aes(x = value)) + geom_histogram() + facet_wrap(~variable)
 ```
 
-By the histogram of points, the amount of points achieved in a season looks to be normal. Seeing as the amount of points is a random variable, we can by the central limit theorem say that the mean of the points is normally distributed. We therefore find the average number of points for each team, as well as the standard deviation, and construct 90 % confidence intervals for the points of each team.
+By the histogram of points, the distribution of points achieved in a season looks to be approximately normal. Seeing as the amount of points is a random variable, we can by the central limit theorem say that the mean of the points is normally distributed. We therefore find the average number of points for each team, as well as the standard deviation, and construct 90 % confidence intervals for the points of each team.
 
 ```{r, echo = F, eval = T}
+# Initialize data frame to store confidence intervals
 confidence_intervals = data.frame(
-  Teams = numPlace[,1], # All the teams
+  Teams = numPlace$Team, # All the teams
   mean = 0,
   sd = 0,
   low = 0,
@@ -446,17 +448,19 @@ for (i in 1:16){
   confidence_intervals$high[i] = confidence_intervals$mean[i] + confidence_intervals$sd[i]*1.645
   }
 
+# Round all values
 confidence_intervals[,2:5] = round(confidence_intervals[,2:5],1)
+
 print(confidence_intervals)
 ```
 
+From the confidence intervals, we see that Rosenborg will win or get silver. Brann may win, but will at worst get 4th. Meanwhile, all hope of staying in the division looks to be gone for Sandefjord.
+
+At last we make a boxplot of the points for each team and interpret the results.
 
 ```{r, echo = F, eval = T}
 # Plot boxplot of points for each team to compare points of each team
 boxplot(points)
 ```
 
-
-
-
-
+We see that the "boxes" (quartile 2 and 3) of Rosenborg, Brann, Molde and Haugesund are non-overlapping. This suggests that this will be the final standing among the top four in the table. Meanwhile, Sandefjord's box is some distance behind Start's box, emphasizing that Sandefjord will get relegated. Yet, there is still possibility for Start and Stabæk to avoid relegation/play-off. 
