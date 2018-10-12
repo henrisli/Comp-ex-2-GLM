@@ -74,14 +74,14 @@ We now make the current standings in the Eliteserie based on all the results in 
 ```{r, echo = F, eval = T}
 ranking = data.frame(
   Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"), 
-  Played = rep(0,16),
-  Won = rep(0,16),
-  Drawn = rep(0,16),
-  Lost = rep(0,16),
-  For = rep(0,16),
-  Against = rep(0,16),
-  GD = rep(0,16),
-  Points = rep(0,16),
+  Played = 0,
+  Won = 0,
+  Drawn = 0,
+  Lost = 0,
+  For = 0,
+  Against = 0,
+  GD = 0,
+  Points = 0,
   stringsAsFactors = FALSE)
 
 for (i in 1:dim(eliteserie)[1]){
@@ -283,9 +283,9 @@ simseason <- function(){
 }
 
 set.seed(4315)
-for (i in 1:1000){
- fotball[[i]] <- simseason()
-}
+# for (i in 1:1000){
+#  fotball[[i]] <- simseason()
+# }
 
 #saveRDS(fotball, file = "Simulering.rds")
 ```
@@ -298,20 +298,20 @@ data = readRDS(file = "Simulering.rds")
 
 rankingAverage <- data.frame(
     Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
-    Played = rep(30,16),
-    Won = rep(0,16),
-    Drawn = rep(0,16),
-    Lost = rep(0,16),
-    For = rep(0,16),
-    Against = rep(0,16),
-    GD = rep(0,16),
-    Points = rep(0,16),
+    Played = 30,
+    Won = 0,
+    Drawn = 0,
+    Lost = 0,
+    For = 0,
+    Against = 0,
+    GD = 0,
+    Points = 0,
     stringsAsFactors = FALSE)
 
 #Number of times each team placed in each place
 numPlace = data.frame(
   Team = c("Rosenborg", "Brann", "Molde", "Haugesund", "Ranheim_TF", "Vaalerenga", "Odd", "Tromsoe", "Sarpsborg08", "Kristiansund", "Stroemsgodset", "BodoeGlimt", "Lillestroem", "Stabaek", "Start", "Sandefjord_Fotball"),
-    One = rep(0,16), Two = rep(0,16), Three = rep(0,16), Four = rep(0,16), Five = rep(0,16), Six = rep(0,16), Seven = rep(0,16), Eight = rep(0,16), Nine = rep(0,16), Ten = rep(0,16), Eleven = rep(0,16), Twelve = rep(0,16), Thirteen = rep(0,16), Fourteen = rep(0,16), Fifteen = rep(0,16), Sixteen = rep(0,16),
+    One = 0, Two = 0, Three = 0, Four = 0, Five = 0, Six = 0, Seven = 0, Eight = 0, Nine = 0, Ten = 0, Eleven = 0, Twelve = 0, Thirteen = 0, Fourteen = 0, Fifteen = 0, Sixteen = 0,
     stringsAsFactors = FALSE)
 
 
@@ -343,6 +343,7 @@ rankingAverage = rankingAverage[order(rankingAverage$Points, rankingAverage$GD, 
 # Rename rows after sorting
 row.names(rankingAverage) <- seq(1,16)
 
+# Round to 1 decimal
 rankingAverage[,2:9] = round(rankingAverage[,2:9],1)
 
 head(points)
@@ -360,48 +361,37 @@ ggplot(numPlace, aes(x = seq(1:16))) + geom_line(aes(y = t(numPlace[1,2:17]), co
 ```
 
 ```{r, echo = F, eval = T}
-require(gridExtra)
-plot1 <- ggplot(placings, aes(placings[,1])) + geom_bar() + labs(x = "Place", title = colnames(placings)[1])
-plot2 <- ggplot(placings, aes(placings[,2])) + geom_bar() + labs(x = "Place", title = colnames(placings)[2])
-plot3 <- ggplot(placings, aes(placings[,3])) + geom_bar() + labs(x = "Place", title = colnames(placings)[3])
-plot4 <- ggplot(placings, aes(placings[,4])) + geom_bar() + labs(x = "Place", title = colnames(placings)[4])
-plot5 <- ggplot(placings, aes(placings[,5])) + geom_bar() + labs(x = "Place", title = colnames(placings)[5])
-plot6 <- ggplot(placings, aes(placings[,6])) + geom_bar() + labs(x = "Place", title = colnames(placings)[6])
-plot7 <- ggplot(placings, aes(placings[,7])) + geom_bar() + labs(x = "Place", title = colnames(placings)[7])
-plot8 <- ggplot(placings, aes(placings[,8])) + geom_bar() + labs(x = "Place", title = colnames(placings)[8])
-plot9 <- ggplot(placings, aes(placings[,9])) + geom_bar() + labs(x = "Place", title = colnames(placings)[9])
-plot10 <- ggplot(placings, aes(placings[,10])) + geom_bar() + labs(x = "Place", title = colnames(placings)[10])
-plot11 <- ggplot(placings, aes(placings[,11])) + geom_bar() + labs(x = "Place", title = colnames(placings)[11])
-plot12 <- ggplot(placings, aes(placings[,12])) + geom_bar() + labs(x = "Place", title = colnames(placings)[12])
-plot13 <- ggplot(placings, aes(placings[,13])) + geom_bar() + labs(x = "Place", title = colnames(placings)[13])
-plot14 <- ggplot(placings, aes(placings[,14])) + geom_bar() + labs(x = "Place", title = colnames(placings)[14])
-plot15 <- ggplot(placings, aes(placings[,15])) + geom_bar() + labs(x = "Place", title = colnames(placings)[15])
-plot16 <- ggplot(placings, aes(placings[,16])) + geom_bar() + labs(x = "Place", title = colnames(placings)[16])
-grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, plot11, plot12, plot13, plot14, plot15, plot16, ncol=4)
+# Plot the placings of each team in a barchart
+placingsplot <- melt(placings)
+ggplot(placingsplot, aes(x = value)) + geom_bar() + facet_wrap(~variable)
 ```
 
 
 ```{r, echo = F, eval = T}
-require(gridExtra)
-plot1 <- ggplot(points, aes(points[,1])) + geom_bar() + labs(x = "Points", title = colnames(points)[1])
-plot2 <- ggplot(points, aes(points[,2])) + geom_bar() + labs(x = "Points", title = colnames(points)[2])
-plot3 <- ggplot(points, aes(points[,3])) + geom_bar() + labs(x = "Points", title = colnames(points)[3])
-plot4 <- ggplot(points, aes(points[,4])) + geom_bar() + labs(x = "Points", title = colnames(points)[4])
-plot5 <- ggplot(points, aes(points[,5])) + geom_bar() + labs(x = "Points", title = colnames(points)[5])
-plot6 <- ggplot(points, aes(points[,6])) + geom_bar() + labs(x = "Points", title = colnames(points)[6])
-plot7 <- ggplot(points, aes(points[,7])) + geom_bar() + labs(x = "Points", title = colnames(points)[7])
-plot8 <- ggplot(points, aes(points[,8])) + geom_bar() + labs(x = "Points", title = colnames(points)[8])
-plot9 <- ggplot(points, aes(points[,9])) + geom_bar() + labs(x = "Points", title = colnames(points)[9])
-plot10 <- ggplot(points, aes(points[,10])) + geom_bar() + labs(x = "Points", title = colnames(points)[10])
-plot11 <- ggplot(points, aes(points[,11])) + geom_bar() + labs(x = "Points", title = colnames(points)[11])
-plot12 <- ggplot(points, aes(points[,12])) + geom_bar() + labs(x = "Points", title = colnames(points)[12])
-plot13 <- ggplot(points, aes(points[,13])) + geom_bar() + labs(x = "Points", title = colnames(points)[13])
-plot14 <- ggplot(points, aes(points[,14])) + geom_bar() + labs(x = "Points", title = colnames(points)[14])
-plot15 <- ggplot(points, aes(points[,15])) + geom_bar() + labs(x = "Points", title = colnames(points)[15])
-plot16 <- ggplot(points, aes(points[,16])) + geom_bar() + labs(x = "Points", title = colnames(points)[16])
-grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, plot11, plot12, plot13, plot14, plot15, plot16, ncol=4)
-
+# Plot the points of each team in a histogram
+pointsplot <- melt(points)
+ggplot(pointsplot, aes(x = value)) + geom_histogram() + facet_wrap(~variable)
 ```
 
+By the histogram of points, the amount of points achieved in a season looks to be normal. Seeing as the amount of points is a random variable, we can by the central limit theorem say that the mean of the points is normally distributed. We therefore find the average number of points for each team, as well as the standard deviation, and construct 90 % confidence intervals for the points of each team.
 
+```{r, echo = F, eval = T}
+confidence_intervals = data.frame(
+  Teams = numPlace[,1], # All the teams
+  mean = 0,
+  sd = 0,
+  low = 0,
+  high = 0,
+  stringsAsFactors = FALSE)
+
+for (i in 1:16){
+  confidence_intervals$mean[i] = mean(points[[i]])
+  confidence_intervals$sd[i] = sd(points[[i]])
+  confidence_intervals$low[i] = confidence_intervals$mean[i] - confidence_intervals$sd[i]*1.645
+  confidence_intervals$high[i] = confidence_intervals$mean[i] + confidence_intervals$sd[i]*1.645
+  }
+
+confidence_intervals[,2:5] = round(confidence_intervals[,2:5],1)
+print(confidence_intervals)
+```
 
