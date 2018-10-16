@@ -32,45 +32,35 @@ We let $y_i$ be the number of successfull ascents, and $n_i$ be the total number
 
 where $x_i$ is a $p$ dimensional column vector of covariates for observation $i$, and $\beta$ is the vector of regression parameters.
 
-
-## a)
-
-
-We have made the following assumptions for the model:
-
-1. $Y_i$ \tilde bin($n_i,\pi_i$), and E($Y_i$) = $\mu_i$ = $\pi_i$, and Var($Y_i$) = \pi_i(1-\pi_i).
+1. $Y_i$ $\tilde$ bin($n_i,\pi_i$), and E($Y_i$) = $\mu_i$ = $\pi_i$, and Var($Y_i$) = $\pi_i(1-\pi_i)$.
 2. Linear predictior: $\eta_i = x_i^T\beta$.
 3. Logit link: $\eta_i = \text{ln}\big(\frac{\pi_i}{1-\pi_i}\big)$
 
-where **$x_i$** is the p dimentional column vector of covariates for observation i and **$\beta$** is the vector of regression parameters.
+where $x_i$ is the p dimentional column vector of covariates for observation i and $\beta$ is the vector of regression parameters.
 
 the likelihood can be written:
 
-\begin{equation}
-L(\beta)= \prod_{i=1}^n L_i(\beta) = \prod_{i=1}^n f(y_i;\beta) = \prod_{i=1}^n\pi_i^{y_i}(1-\pi_i)^{1-y_i}.
-\end{equation}
+$$L(\beta)= \prod_{i=1}^n L_i(\beta) = \prod_{i=1}^n f(y_i;\beta) = \prod_{i=1}^n\pi_i^{y_i}(1-\pi_i)^{1-y_i}.$$
 
 if we take the logarithm, we get the log likelihood function:
 
-\begin{equation}
-l(\beta) = \sum_{i=1}^n [y_i \text{ln}(\pi_i)+(1-y_i)\text{ln}(1-\pi_i)] 
+$$
+l(\beta) = \sum_{i=1}^n [y_i \text{ln}(\pi_i)+(1-y_i)\text{ln}(1-\pi_i)]
  = \sum_{i=1}^n [y_i \text{ln}\big(\frac{\pi_i}{1-\pi_i}\big)+\text{ln}(1-\pi_i)]
-\end{equation}
+$$
 
 To express the log likelihood as a function of $\beta$ we use the link between $\eta_i$ and $\pi_i$. We have that $\pi_i = \frac{e^{\eta_i}}{1+e^{\eta_i}}$. The log likelihood function can then be written:
 
-
-\begin{equation}
+$$
 l(\beta) = \sum_{i=1}^n[y_i\eta_i+\text{ln}(\frac{1}{1+\text{exp}(\eta_i)})]
 =  \sum_{i=1}^n[y_i\eta_i-\text{ln}(1+\text{exp}(\eta_i)).
-\end{equation}
-
+$$
 
 Now we use that $\eta_i = x_i^T\beta$ and get:
 
-\begin{equation}
+$$
 l(\beta)=\sum_{i=1}^n[y_ix_i^T \beta - \text{ln} (1+\exp(x_i^T\beta))].
-\end{equation}
+$$
 
 which is an expression of the log likelihood as a function of beta.
 
