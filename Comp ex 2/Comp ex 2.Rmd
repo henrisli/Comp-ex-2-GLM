@@ -67,7 +67,8 @@ We load the dataset and fit a model as described in Part a) with success rate **
 filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/mountains"
 mount <- read.table(file = filepath, header = TRUE, col.names = c("height", 
     "prominence", "fail", "success"))
-glm(cbind(success, fail) ~ height + prominence, data = mount, family = "binomial")
+fit = glm(cbind(success, fail) ~ height + prominence, data = mount, family = "binomial")
+summary(fit)
 ```
 We want to interpret the model parameters by using the odds. We have from the link function that
 $$
@@ -84,7 +85,31 @@ $$
 \frac{\pi_i}{1-\pi_i} = \exp(\beta_0) \cdot \exp(\beta_1x_{i1})\cdot \exp(\beta_2x_{i2}).
 $$
 
-The left hand side is what we call the odds. If we now increase one of the covariates by one and keep the other constant, the odds will be multiplied by $\exp(\beta)$. Coefficient estimates for both height and prominence are negative. This means that for both coefficients $\exp(\beta) < 1$, and an increase in height or prominence will give a decrease in success probability of climbing the mountain. For example, increasing height by one meter will decrease the odds by multiplying it with $\exp(\beta_1) = \exp(-0.001635) = 0.998$.
+The left hand side is what we call the odds. If we now increase covariate $j$ by one and keep the other constant, the odds will be multiplied by $\exp(\beta_j)$. Coefficient estimates for both height and prominence are negative. This means that for both coefficients $\exp(\beta_j) < 1$, and an increase in height or prominence will give a decrease in success probability of climbing the mountain. For example, increasing height by one meter will decrease the odds by multiplying it with $\exp(\beta_1) = \exp(-0.001635) = 0.998$.
+
+We can interpret the intercept in the following way. For a mountain with zero height, and zero prominence, the odds of climbing it will be $\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) = \exp(13.685845) = 878389$, or $\pi_i \simeq 1$. Although the intercept in this case is just theoretical (there would be no point in climbing a mountain of zero height), it makes sense because climbing a mountain of zero height should have probability 1.
+
+Now we want to discuss the significance of the parameters. We do a Wald-test for each of the parameters. The Wald-test has hypotheses
+$$\text{H}_0 : \beta_j = 0 \quad \text{vs.} \quad \text{H}_1: \beta_j \neq 0.$$
+
+We read the values of the test statistics from the summary above, and get $z_0 = 12.861, z_1 = -11.521, z_2 = -3.821$. This gives p-values of $p_0 < 2\cdot 10^{-16}, p_1 < 2 \cdot 10^{-16}, p_2 = 0.000133$. All these p-values are below any reasonable significance level, so we reject the null-hypothesis for all parameters. This means that all the parameters are significant. 
+
+Next, we want to use a likelihood ratio test, which compares the likelihood of two models. We want to test the significance of the above model, so we use the deviance. We have hypotheses
+$$\text{H}_0: \text{"Our model fits the data well"}, \quad \text{H}_1 : \text{"Our model does not fit the data well"}.$$
+
+The deviance compares the candidate model with a saturated model. The saturated model is the model that provides a perfect fit to our data, so in the saturated model, $\tilde{\pi}_i = y_i$. We then get the deviance by
+$$D = -2(\ln L(\text{candidate model}) - \ln L(\text{saturated model}))  = -2(l(\hat{\pi}) - l(\tilde{\pi})).$$
+
+Asymptotically, $D$ is distributed as $\chi^2$ with $G-p = 110$ degrees of freedom. We calculate the deviance and the p-value.
+```{r, echo = F, eval = T}
+D = deviance(fit)
+cat("p-value: ", 1 - pchisq(D,110))
+```
+
+Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model.
+**SE LITT MER PÅ DENNE DELEN SENERE**
+
+_LEGG INN CONFIDENCE INTERVALS HER_
 
 
 # Part 2: Poisson regression - Eliteserien 2018
