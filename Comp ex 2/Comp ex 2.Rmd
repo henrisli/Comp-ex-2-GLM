@@ -26,70 +26,65 @@ opts_chunk$set(tidy.opts = list(width.cutoff = 68), tidy = TRUE, warning = FALSE
 
 We let $y_i$ be the number of successfull ascents, and $n_i$ be the total number of attempts (success + fail) of the i'th mountain. We then do binary regression with the logit link to model the probability of success. This gives
 
-1. Model for response: $Y_i \sim \text{Bin}(n_i,\pi_i), \quad \text{for } i = 1,\dots,113$
-2. Linear predictor: $\eta_i = {\bf x} _i^T \beta$
-3. Link function: $\eta_i = \ln(\frac{\pi_i}{1-\pi_i})$
+1. Model for response: $Y_i \sim \text{Bin}(n_i,\pi_i), \quad \text{for } i = 1,\dots,113$, with $\text{E}(Y_i) = \mu_i = \pi_i$ and $\text{Var}(Y_i) = \pi_i(1-\pi_i)$
+2. Linear predictor: $\eta_i = {\bf x} _i^T \boldsymbol \beta$
+3. Link function: $\eta_i = \ln\big(\frac{\pi_i}{1-\pi_i}\big)$, also known as logit link
 
-where $x_i$ is a $p$ dimensional column vector of covariates for observation $i$, and $\beta$ is the vector of regression parameters.
+where ${\bf x}_i$ is a $p$ dimensional column vector of covariates for observation $i$, and ${\boldsymbol \beta}$ is the vector of regression parameters.
 
-1. $Y_i$ $\tilde$ bin($n_i,\pi_i$), and E($Y_i$) = $\mu_i$ = $\pi_i$, and Var($Y_i$) = $\pi_i(1-\pi_i)$.
-2. Linear predictior: $\eta_i = x_i^T\beta$.
-3. Logit link: $\eta_i = \text{ln}\big(\frac{\pi_i}{1-\pi_i}\big)$
+Then, the likelihood can be written
 
-where $x_i$ is the p dimentional column vector of covariates for observation i and $\beta$ is the vector of regression parameters.
+$$L(\boldsymbol \beta)= \prod_{i=1}^n L_i(\beta) = \prod_{i=1}^n f(y_i;\beta) = \prod_{i=1}^n\pi_i^{y_i}(1-\pi_i)^{n_i-y_i}.$$
 
-the likelihood can be written:
-
-$$L(\beta)= \prod_{i=1}^n L_i(\beta) = \prod_{i=1}^n f(y_i;\beta) = \prod_{i=1}^n\pi_i^{y_i}(1-\pi_i)^{1-y_i}.$$
-
-if we take the logarithm, we get the log likelihood function:
+If we take the natural logarithm, we get the log likelihood function
 
 $$
-l(\beta) = \sum_{i=1}^n [y_i \text{ln}(\pi_i)+(1-y_i)\text{ln}(1-\pi_i)]
- = \sum_{i=1}^n [y_i \text{ln}\big(\frac{\pi_i}{1-\pi_i}\big)+\text{ln}(1-\pi_i)]
+l(\boldsymbol \beta) = \ln(L(\boldsymbol \beta)) = \sum_{i=1}^n l_i(\boldsymbol \beta) \\= \sum_{i=1}^n [y_i \ln(\pi_i)+(n_i-y_i)\ln(1-\pi_i)]
+ = \sum_{i=1}^n [y_i \ln\big(\frac{\pi_i}{1-\pi_i}\big)+n_i \ln(1-\pi_i)]
 $$
 
-To express the log likelihood as a function of $\beta$ we use the link between $\eta_i$ and $\pi_i$. We have that $\pi_i = \frac{e^{\eta_i}}{1+e^{\eta_i}}$. The log likelihood function can then be written:
+To express the log likelihood as a function of $\boldsymbol \beta$ we first use the link between $\eta_i$ and $\pi_i$. By using the inverse of the link function (the logistic response function) we have that $\pi_i = \frac{\exp(\eta_i)}{1+\exp(\eta_i)}$. The log likelihood function can then be written
 
 $$
-l(\beta) = \sum_{i=1}^n[y_i\eta_i+\text{ln}(\frac{1}{1+\text{exp}(\eta_i)})]
-=  \sum_{i=1}^n[y_i\eta_i-\text{ln}(1+\text{exp}(\eta_i)).
+l(\boldsymbol \beta) = \sum_{i=1}^n[y_i\eta_i+n_i \ln\big(\frac{1}{1+\exp(\eta_i)}\big)]
+=  \sum_{i=1}^n[y_i\eta_i-n_i \ln(1+\exp(\eta_i))].
 $$
 
-Now we use that $\eta_i = x_i^T\beta$ and get:
+Finally we use that $\eta_i = {\bf x}_i^T \boldsymbol \beta$ and get
 
 $$
-l(\beta)=\sum_{i=1}^n[y_ix_i^T \beta - \text{ln} (1+\exp(x_i^T\beta))].
+l(\boldsymbol \beta)=\sum_{i=1}^n[y_i {\bf x}_i^T \boldsymbol \beta - n_i \ln(1+\exp({\bf x}_i^T \boldsymbol \beta)],
 $$
+which is an expression for the log likelihood as a function of beta.
 
-which is an expression of the log likelihood as a function of beta.
-
-Since we know that this function is concave we can find the parameters, $\beta$ that gives the highest likelihood by taking the partial derivatives with respect to $\beta$ to get the score function, $s$. The parameters $\beta$ that gives the highest likelihood is those for which the score function equal to zero.
-
+Since we know that this function is concave we can find the parameters, $\boldsymbol \beta$ that gives the maximum likelihood by taking the partial derivatives with respect to $\boldsymbol \beta$ to get the score function, $s(\boldsymbol \beta)$. The parameters $\boldsymbol \beta$ that gives the maximum likelihood is those for which the score function equals zero.
+**SE PÅ DENNE SENERE**
 
 ## b)
-We have that:
+We load the dataset and fit a model as described in Part a) with success rate **(er dette riktig?)** as response and height and prominence as predictors. 
 
-\begin{equation}
-\pi_i = \frac{\text{exp}^{\eta_i}}{1+\text{exp}^{\eta_i}}.
-\end{equation}
-
-This can be rewritten:
-
-\begin{equation}
-\eta_i = \text{ln}\big(\frac{\pi_i}{1-\pi_i}\big).
-\end{equation}
-
-Our linear predictor is $\eta_i = x_i^T\beta$. If we insert this we get:
+```{r, echo = F, eval = T}
+filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/mountains"
+mount <- read.table(file = filepath, header = TRUE, col.names = c("height", 
+    "prominence", "fail", "success"))
+glm(cbind(success, fail) ~ height + prominence, data = mount, family = "binomial")
+```
+We want to interpret the model parameters by using the odds. We have from the link function that
 $$
-\ln\big(\frac{\pi_i}{1-\pi_i}\big) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + ... + \beta_kx_{ik}
-$$
-and
-$$
-\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) \cdot \exp(\beta_1x_{i1})\cdot \exp(\beta_2x_{i2})\cdot\cdot\cdot\exp(\beta_kx_{ik}).
+\eta_i = \ln\big(\frac{\pi_i}{1-\pi_i}\big).
 $$
 
-This shows that a one increase in hight will give a increase in the odds equal to $\exp(\beta_1)$.
+Our linear predictor is $\eta_i = {\bf x}_i^T \boldsymbol \beta$. If we insert this, assuming intercept and two covariates, we get
+$$
+\ln\big(\frac{\pi_i}{1-\pi_i}\big) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2}.
+$$
+
+We can now take $\exp()$ of both sides, yielding
+$$
+\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) \cdot \exp(\beta_1x_{i1})\cdot \exp(\beta_2x_{i2}).
+$$
+
+The left hand side is what we call the odds. If we now increase one of the covariates by one and keep the other constant, the odds will be multiplied by $\exp(\beta)$. Coefficient estimates for both height and prominence are negative. This means that for both coefficients $\exp(\beta) < 1$, and an increase in height or prominence will give a decrease in success probability of climbing the mountain. For example, increasing height by one meter will decrease the odds by multiplying it with $\exp(\beta_1) = \exp(-0.001635) = 0.998$.
 
 
 # Part 2: Poisson regression - Eliteserien 2018
