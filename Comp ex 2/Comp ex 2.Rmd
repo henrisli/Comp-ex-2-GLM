@@ -109,6 +109,17 @@ cat("p-value: ", 1 - pchisq(D,110))
 Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model.
 **SE LITT MER PÅ DENNE DELEN SENERE**
 
+Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Or equivalently
+$$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
+
+From the `r` printout, we get the coefficient estimates and the estimated standard deviation, from which we can construct a confidence interval. We denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$ and get that for each coefficient $\beta_j$,
+$$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
+We can then make a $95 \%$ confidence interval for the height parameter $\beta_{\text{height}}$, which will be
+$$\beta_{\text{height}} \in \big[\hat{\beta}_{\text{height}} - z_{0.025}\sqrt{c_{jj}}, \ \hat{\beta}_\text{height} + z_{0.025}\sqrt{c_{jj}}\big],$$
+where $\sqrt{c_{jj}}$ can be read off as the standard deviation of the height parameter. Inserting values from the `r` printout, we get
+$$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 1.96\cdot 0.000142\big] = \big[-0.00191332, \ -0.00135668\big].$$
+
+
 _LEGG INN CONFIDENCE INTERVALS HER_
 
 
