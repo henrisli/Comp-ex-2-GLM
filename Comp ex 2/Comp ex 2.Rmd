@@ -68,7 +68,28 @@ Since we know that this function is concave we can find the parameters, $\beta$ 
 
 
 ## b)
+We have that:
 
+\begin{equation}
+\pi_i = \frac{\text{exp}^{\eta_i}}{1+\text{exp}^{\eta_i}}.
+\end{equation}
+
+This can be rewritten:
+
+\begin{equation}
+\eta_i = \text{ln}\big(\frac{\pi_i}{1-\pi_i}\big).
+\end{equation}
+
+Our linear predictor is $\eta_i = x_i^T\beta$. If we insert this we get:
+$$
+\ln\big(\frac{\pi_i}{1-\pi_i}\big) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + ... + \beta_kx_{ik}
+$$
+and
+$$
+\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) \cdot \exp(\beta_1x_{i1})\cdot \exp(\beta_2x_{i2})\cdot\cdot\cdot\exp(\beta_kx_{ik}).
+$$
+
+This shows that a one increase in hight will give a increase in the odds equal to $\exp(\beta_1)$.
 
 
 # Part 2: Poisson regression - Eliteserien 2018
