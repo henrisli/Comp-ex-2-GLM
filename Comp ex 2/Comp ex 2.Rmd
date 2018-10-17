@@ -117,10 +117,32 @@ $$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
 We can then make a $95 \%$ confidence interval for the height parameter $\beta_{\text{height}}$, which will be
 $$\beta_{\text{height}} \in \big[\hat{\beta}_{\text{height}} - z_{0.025}\sqrt{c_{jj}}, \ \hat{\beta}_\text{height} + z_{0.025}\sqrt{c_{jj}}\big],$$
 where $\sqrt{c_{jj}}$ can be read off as the standard deviation of the height parameter. Inserting values from the `r` printout, we get
-$$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 1.96\cdot 0.000142\big] = \big[-0.00191332, \ -0.00135668\big].$$
+$$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 1.96\cdot 0.000142\big] = \big[-0.00191332, \ -0.00135668\big] = \big[\hat{\beta}_L,\hat{\beta}_H\big].$$
+
+Finally we can take the $\exp()$ function of both limits of the interval, and we get that
+$$\exp(\beta_{\text{height}}) \in \big[\exp(\hat{\beta}_L),\exp(\hat{\beta}_H)\big] = \big[0.9981,0.9986 \big].$$
+
+In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95 \%$ probability that an increase in height of 1 meter means that the probability of a successful ascent will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$.
+
+## c)
+
+We plot the deviance residuals...
+
+```{r, echo = F, eval = T}
+library(ggplot2)
+residual = residuals(fit, type = "deviance")
+df = data.frame(fitted = fit$fitted.values, dres = residual)
+ggplot(df, aes(x = fitted, y = dres)) + geom_point()
+```
 
 
-_LEGG INN CONFIDENCE INTERVALS HER_
+
+
+## d)
+
+
+
+
 
 
 # Part 2: Poisson regression - Eliteserien 2018
