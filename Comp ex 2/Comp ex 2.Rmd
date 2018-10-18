@@ -186,6 +186,8 @@ Finally we calculate a confidence interval for the probability, which gives
 $$\pi_{C} \in \Bigg[\frac{\exp(0.875149 - 1.96\cdot 1.52389)}{1+\exp(0.875149 - 1.96\cdot 1.52389)}, \frac{\exp(0.875149 + 1.96\cdot 1.52389)}{1+\exp(0.875149 + 1.96\cdot 1.52389)}\Bigg] = \Bigg[0.1080 , 0.9794\Bigg].$$
 
 
+**SPØR INGEBORG OM DET ER 20 ELLER 4 SUCCESS FOR CHOGOLISA**
+
 
 
 # Part 2: Poisson regression - Eliteserien 2018
