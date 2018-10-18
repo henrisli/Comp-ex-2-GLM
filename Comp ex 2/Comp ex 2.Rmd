@@ -131,11 +131,20 @@ We plot the deviance residuals...
 ```{r, echo = F, eval = T}
 library(ggplot2)
 residual = residuals(fit, type = "deviance")
-df = data.frame(fitted = fit$fitted.values, dres = residual)
+df = data.frame(fitted = fit$fitted.values, dres = residual, height = mount$height, prominence = mount$prominence)
 ggplot(df, aes(x = fitted, y = dres)) + geom_point()
+ggplot(df, aes(x = height, y = dres)) + geom_point()
+ggplot(df, aes(x = prominence, y = dres)) + geom_point()
 ```
 
+```{r, echo = F, eval = T}
 
+height = rep(seq(min(mount$height), max(mount$height), length.out = 100), each = 100)
+prominence = rep(seq(min(mount$prominence), max(mount$prominence), length.out = 100),100)
+
+df2 = data.frame(fitted = exp(fit$coefficients[1] + fit$coefficients[2]*height + fit$coefficients[3]*prominence)/(1+exp(fit$coefficients[2]*height+fit$coefficients[3]*prominence+fit$coefficients[1])), height = height, prominence = prominence)
+ggplot(df2, aes(x = height, y = prominence, fill = fitted)) + geom_raster() + geom_contour(aes(z = fitted)) + scale_fill_gradientn(colours = terrain.colors(10)) + labs(x = "height", y = "prominence")
+```
 
 
 ## d)
