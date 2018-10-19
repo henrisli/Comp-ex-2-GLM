@@ -55,9 +55,16 @@ Finally we use that $\eta_i = {\bf x}_i^T \boldsymbol \beta$ and get
 $$
 l(\boldsymbol \beta)=\sum_{i=1}^n[y_i {\bf x}_i^T \boldsymbol \beta - n_i \ln(1+\exp({\bf x}_i^T \boldsymbol \beta)],
 $$
+Sikker på at me skal ha $n_i$ inne her? 
+
 which is an expression for the log likelihood as a function of beta.
 
-Since we know that this function is concave we can find the parameters, $\boldsymbol \beta$ that gives the maximum likelihood by taking the partial derivatives with respect to $\boldsymbol \beta$ to get the score function, $s(\boldsymbol \beta)$. The parameters $\boldsymbol \beta$ that gives the maximum likelihood is those for which the score function equals zero.
+Since we know that this function is concave we can find the parameters, $\boldsymbol \beta$ that gives the maximum likelihood by taking the partial derivatives with respect to $\boldsymbol \beta$ to get the score function, 
+
+$$
+s(\boldsymbol \beta) = \frac{\partial l(\boldsymbol \beta)}{\partial \beta} = \sum_{i=1}^n y_i x_i - n_i \frac{x_i \exp{\mathbf{x}_i^T \boldsymbol \beta}}{1 + \exp{\mathbf{x}_i^T \boldsymbol \beta}}.
+$$
+The parameters $\boldsymbol \beta$ that gives the maximum likelihood is those for which the score function equals the zero-vector.
 **SE PÅ DENNE SENERE**
 
 ## b)
@@ -77,15 +84,15 @@ $$
 
 Our linear predictor is $\eta_i = {\bf x}_i^T \boldsymbol \beta$. If we insert this, assuming intercept and two covariates, we get
 $$
-\ln\big(\frac{\pi_i}{1-\pi_i}\big) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2}.
+\ln \big(\frac{\pi_i}{1-\pi_i}\big) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2}.
 $$
 
-We can now take $\exp()$ of both sides, yielding
+We can now take $\exp(\cdot)$ of both sides, yielding
 $$
 \frac{\pi_i}{1-\pi_i} = \exp(\beta_0) \cdot \exp(\beta_1x_{i1})\cdot \exp(\beta_2x_{i2}).
 $$
 
-The left hand side is what we call the odds. If we now increase covariate $j$ by one and keep the other constant, the odds will be multiplied by $\exp(\beta_j)$. Coefficient estimates for both height and prominence are negative. This means that for both coefficients $\exp(\beta_j) < 1$, and an increase in height or prominence will give a decrease in success probability of climbing the mountain. For example, increasing height by one meter will decrease the odds by multiplying it with $\exp(\beta_1) = \exp(-0.001635) = 0.998$.
+The left hand side is what we call the odds. If we now increase covariate $j$ by one unit and keep the other constant, the odds will be multiplied by $\exp(\beta_j)$. Coefficient estimates for both height and prominence are negative. This means that for both coefficients $\exp(\beta_j) < 1$, and an increase in `height` or `prominence` will give a decrease in the odds and thus a decrease in success probability of climbing the mountain. For example, increasing `height` by one meter will decrease the odds by multiplying it with $\exp(\beta_1) = \exp(-0.001635) = 0.998$.
 
 We can interpret the intercept in the following way. For a mountain with zero height, and zero prominence, the odds of climbing it will be $\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) = \exp(13.685845) = 878389$, or $\pi_i \simeq 1$. Although the intercept in this case is just theoretical (there would be no point in climbing a mountain of zero height), it makes sense because climbing a mountain of zero height should have probability 1.
 
@@ -126,19 +133,25 @@ In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{
 
 ## c)
 
-We plot the deviance residuals...
+We plot the deviance residuals against the fitted values
 
 ```{r, echo = F, eval = T}
 library(ggplot2)
 residual = residuals(fit, type = "deviance")
 df = data.frame(fitted = fit$fitted.values, dres = residual, height = mount$height, prominence = mount$prominence)
 ggplot(df, aes(x = fitted, y = dres)) + geom_point()
+```
+While there is no clear structure, it is difficult to interpret if the model assumptions are sufficiently satisfied. We see  For several covariate patterns we have a relatively small amount of observations. 
+
+
+```{r}
 ggplot(df, aes(x = height, y = dres)) + geom_point()
 ggplot(df, aes(x = prominence, y = dres)) + geom_point()
 ```
 
-```{r, echo = F, eval = T}
 
+
+```{r, echo = F, eval = T}
 height = rep(seq(min(mount$height), max(mount$height), length.out = 100), each = 100)
 prominence = rep(seq(min(mount$prominence), max(mount$prominence), length.out = 100),100)
 
