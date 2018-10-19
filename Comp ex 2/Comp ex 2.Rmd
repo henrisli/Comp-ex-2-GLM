@@ -98,10 +98,18 @@ We can interpret the intercept in the following way. For a mountain with zero he
 
 Now we want to discuss the significance of the parameters. We do a Wald-test for each of the parameters. The Wald-test has hypotheses
 $$\text{H}_0 : \beta_j = 0 \quad \text{vs.} \quad \text{H}_1: \beta_j \neq 0.$$
+Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Equivalently,
+$$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
+We denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$ and get that for each coefficient $\beta_j$,
+$$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
+We can test the significance of the $\beta_j$ using the test statistics 
+$$ 
+z_j = \frac{\hat{\beta}_j - 0}{\sqrt{c_{jj}}}.
+$$
 
 We read the values of the test statistics from the summary above, and get $z_0 = 12.861, z_1 = -11.521, z_2 = -3.821$. This gives p-values of $p_0 < 2\cdot 10^{-16}, p_1 < 2 \cdot 10^{-16}, p_2 = 0.000133$. All these p-values are below any reasonable significance level, so we reject the null-hypothesis for all parameters. This means that all the parameters are significant. 
 
-Next, we want to use a likelihood ratio test, which compares the likelihood of two models. We want to test the significance of the above model, so we use the deviance. We have hypotheses
+Next, we want to use a likelihood ratio test (LRT), which compares the likelihood of two models. We want to test the significance of the above model, so we use the deviance. We have hypotheses
 $$\text{H}_0: \text{"Our model fits the data well"}, \quad \text{H}_1 : \text{"Our model does not fit the data well"}.$$
 
 The deviance compares the candidate model with a saturated model. The saturated model is the model that provides a perfect fit to our data, so in the saturated model, $\tilde{\pi}_i = y_i$. We then get the deviance by
@@ -119,17 +127,15 @@ Because the p-value is below any reasonable signifiance level, we reject the nul
 Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Or equivalently
 $$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
 
-From the `r` printout, we get the coefficient estimates and the estimated standard deviation, from which we can construct a confidence interval. We denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$ and get that for each coefficient $\beta_j$,
-$$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
-We can then make a $95 \%$ confidence interval for the height parameter $\beta_{\text{height}}$, which will be
+As mentioned in the Wald-test. The parameteres are asymptotically normal with mean $\beta$ and variance $c_{jj}$. The `r` printout gives us the coefficient estimates and the estimated standard deviation $\sqrt{c_{jj}}$, of parameter $j$. From this which we can construct a confidence interval. We can make a $95 \%$ confidence interval for the height parameter $\beta_{\text{height}}$. We have $95\%$ confidence that
 $$\beta_{\text{height}} \in \big[\hat{\beta}_{\text{height}} - z_{0.025}\sqrt{c_{jj}}, \ \hat{\beta}_\text{height} + z_{0.025}\sqrt{c_{jj}}\big],$$
 where $\sqrt{c_{jj}}$ can be read off as the standard deviation of the height parameter. Inserting values from the `r` printout, we get
 $$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 1.96\cdot 0.000142\big] = \big[-0.00191332, \ -0.00135668\big] = \big[\hat{\beta}_L,\hat{\beta}_H\big].$$
 
-Finally we can take the $\exp()$ function of both limits of the interval, and we get that
+Finally we can take the $\exp(\cdot)$ function of both limits of the interval, and we get that
 $$\exp(\beta_{\text{height}}) \in \big[\exp(\hat{\beta}_L),\exp(\hat{\beta}_H)\big] = \big[0.9981,0.9986 \big].$$
 
-In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95 \%$ probability that an increase in height of 1 meter means that the probability of a successful ascent will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$.
+In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95\%$ confidence that an increase in height of 1 meter means that the probability of a successful ascent will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$.
 
 ## c)
 
