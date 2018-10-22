@@ -43,11 +43,11 @@ l(\boldsymbol \beta) = \ln(L(\boldsymbol \beta)) = \sum_{i=1}^n l_i(\boldsymbol 
  = \sum_{i=1}^n [y_i \ln\big(\frac{\pi_i}{1-\pi_i}\big)+n_i \ln(1-\pi_i)]
 $$
 
-To express the log likelihood as a function of $\boldsymbol \beta$ we first use the link between $\eta_i$ and $\pi_i$. By using the inverse of the link function (the logistic response function) we have that $\pi_i = \frac{\exp(\eta_i)}{1+\exp(\eta_i)}$. The log likelihood function can then be written
+To express the log likelihood as a function of $\boldsymbol \beta$ we first use the link between $\eta_i$ and $\pi_i$. We use the response function $h(\eta) = g^{-1}(\eta)$, which isthe inverse of the link function. $\pi_i = h(\eta_i) = \frac{\exp(\eta_i)}{1+\exp(\eta_i)}$. The log-likelihood function can then be written
 
 $$
 l(\boldsymbol \beta) = \sum_{i=1}^n[y_i\eta_i+n_i \ln\big(\frac{1}{1+\exp(\eta_i)}\big)]
-=  \sum_{i=1}^n[y_i\eta_i-n_i \ln(1+\exp(\eta_i))].
+= \sum_{i=1}^n[y_i\eta_i-n_i \ln(1+\exp(\eta_i))].
 $$
 
 Finally we use that $\eta_i = {\bf x}_i^T \boldsymbol \beta$ and get
@@ -55,7 +55,6 @@ Finally we use that $\eta_i = {\bf x}_i^T \boldsymbol \beta$ and get
 $$
 l(\boldsymbol \beta)=\sum_{i=1}^n[y_i {\bf x}_i^T \boldsymbol \beta - n_i \ln(1+\exp({\bf x}_i^T \boldsymbol \beta)],
 $$
-Sikker på at me skal ha $n_i$ inne her? 
 
 which is an expression for the log likelihood as a function of beta.
 
@@ -65,7 +64,14 @@ $$
 s(\boldsymbol \beta) = \frac{\partial l(\boldsymbol \beta)}{\partial \beta} = \sum_{i=1}^n y_i x_i - n_i \frac{x_i \exp{\mathbf{x}_i^T \boldsymbol \beta}}{1 + \exp{\mathbf{x}_i^T \boldsymbol \beta}}.
 $$
 The parameters $\boldsymbol \beta$ that gives the maximum likelihood is those for which the score function equals the zero-vector.
-**SE PÅ DENNE SENERE**
+
+$$
+s(\boldsymbol \beta) = \frac{\partial l (\boldsymbol \beta)}{\partial \boldsymbol \beta} = \boldsymbol 0.
+$$
+Which can be found iteratively by letting $n \rightarrow \infty$
+$$
+\boldsymbol \beta_{n+1} = \boldsymbol \beta_n + F^{-1}(\boldsymbol \beta_n) s(\boldsymbol \beta_n)
+$$
 
 ## b)
 We load the dataset and fit a model as described in Part a) with success rate **(er dette riktig?)** as response and height and prominence as predictors. 
@@ -98,7 +104,7 @@ We can interpret the intercept in the following way. For a mountain with zero he
 
 Now we want to discuss the significance of the parameters. We do a Wald-test for each of the parameters. The Wald-test has hypotheses
 $$\text{H}_0 : \beta_j = 0 \quad \text{vs.} \quad \text{H}_1: \beta_j \neq 0.$$
-Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Equivalently,
+Asymptotically ($n \rightarrow \infty$), the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Equivalently,
 $$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
 We denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$ and get that for each coefficient $\beta_j$,
 $$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
@@ -112,7 +118,7 @@ We read the values of the test statistics from the summary above, and get $z_0 =
 Next, we want to use a likelihood ratio test (LRT), which compares the likelihood of two models. We want to test the significance of the above model, so we use the deviance. We have hypotheses
 $$\text{H}_0: \text{"Our model fits the data well"}, \quad \text{H}_1 : \text{"Our model does not fit the data well"}.$$
 
-The deviance compares the candidate model with a saturated model. The saturated model is the model that provides a perfect fit to our data, so in the saturated model, $\tilde{\pi}_i = y_i$. We then get the deviance by
+The deviance compares the candidate model with a saturated model. The saturated model is the model that provides a perfect fit to our data, so in the saturated model, $\tilde{\pi}_i = y_i$. We then get the deviance,
 $$D = -2(\ln L(\text{candidate model}) - \ln L(\text{saturated model}))  = -2(l(\hat{\pi}) - l(\tilde{\pi})).$$
 
 Asymptotically, $D$ is distributed as $\chi^2$ with $G-p = 110$ degrees of freedom. We calculate the deviance and the p-value.
@@ -189,7 +195,45 @@ This means that the estimated probability of successfully ascending Mount Everes
 $$\hat{\pi}_{\text{M E}} = \frac{0.09866}{1-0.09866} = 0.0898 \approx 9 \%.$$
 Or in text, the probability of successfully ascending Mount Everest is estimated to be $9 \%$.
 
-Now, we want to make a $95 \%$ confidence interval for the probability of successfully ascending Mount Everest. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, as we did when we made a confidence interval for $\beta_h$ in part 1b). In the same way as we did in part 1b), we get the coefficient estimates and the estimated standard deviations from the `r` printout, from which we can construct a confidence interval for the linear predictor $LP = \beta_I + \beta_hx_{ME,h} + \beta_px_{ME,p}$. We denote by $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ the estimated linear predictor, and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$ the standard deviation for the estimated linear predictor. Again, we denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$, so $c_jj$ will be the variance of $\hat{\beta}_j$. Then, we get that
+Now, we want to make a $95 \%$ confidence interval for the probability of successfully ascending Mount Everest. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
+$$
+\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).
+$$
+Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor to the corresponding probabilites and get a confidence interval for ascent success probability for Mount Everest and Chogolisia. 
+
+```{r, echo=F, eval=T}
+x_ME <- c(1, 8848, 8848)
+x_CH <- c(1, 7665, 1624)
+
+eta_ME <- t(x_ME)%*%fit$coefficients
+eta_CH <- t(x_CH)%*%fit$coefficients
+std_ME <- sqrt(t(x_ME) %*% vcov(fit) %*% x_ME)
+std_CH <- sqrt(t(x_CH) %*% vcov(fit) %*% x_CH)
+
+eta_limits_ME = c(eta_ME + qnorm(0.025) * std_ME, eta_ME + qnorm(0.975) * std_ME)
+eta_limits_CH = c(eta_CH + qnorm(0.025) * std_CH, eta_CH + qnorm(0.975) * std_CH)
+
+limits = rbind(eta_limits_ME, eta_limits_CH)
+rownames(limits) = c('Mt. Everest', 'Chogolisia')
+colnames(limits) = c('2.5%', '97.5%')
+```
+For the linear predictor we get limits
+```{r, echo=T, eval=T}
+limits
+```
+Which is transformed to the probabilites
+```{r, echo=T, eval=T}
+prob = exp(limits)/(1 + exp(limits))
+prob
+```
+
+, as we did when we made a confidence interval for $\beta_h$ in part 1b). In the same way as we did in part 1b), we get the coefficient estimates and the estimated standard deviations from the `r` printout, from which we can construct a confidence interval for the linear predictor $LP = \beta_I + \beta_hx_{ME,h} + \beta_px_{ME,p}$. We denote by $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ the estimated linear predictor, 
+
+and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$ the standard deviation for the estimated linear predictor.
+
+$\hat{\beta_i}$ ER IKKE NØDVENDIGVIS UAVHENGIGE OG VI MÅ DERFOR TA MED KOVARIANSLEDDENE, eller?
+
+Again, we denote $c_{jj}$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$, so $c_jj$ will be the variance of $\hat{\beta}_j$. Then, we get that
 $$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$
 
 We can then make a $95 \%$ confidence interval for the linear predictor, which will be
@@ -210,13 +254,13 @@ Inserting values from the `r` printout, we get that $\widehat{LP} = 13.69 - 0.00
 
 $$\pi_{ME} \in \Bigg[\frac{\exp(-2.316 - 1.96\cdot 1.695)}{1+\exp(-2.316 - 1.96\cdot 1.695)}, \frac{\exp(-2.316 + 1.96\cdot 1.695)}{1+\exp(-2.316 + 1.96\cdot 1.695)}\Bigg] = \Bigg[0.00354 , 0.7322\Bigg].$$
 
-This confidence interval is really large (almost the whole range of the response [0,1]). Also, Mount Everest has prominence of 8848 and height of 8848, which are both outside the data range used to fit the model. Therefore, it is not reasonable to estimate the probability of climbing Mount Everest with this model. **SKRIV KANSKJE LITT MER HER**
+Mount Everest has prominence of 8848 and height of 8848, which are both outside the data range used to fit the model. We therefore have no way to control if the model is valid for this range, and can therefore not argue that the predicted probabilites are a good approximation. Therefore, it is not reasonable to estimate the probability of climbing Mount Everest with this model. In addition, the confidence interval is really large (almost the whole range of the response [0,1]), and thus quite useless. **SKRIV KANSKJE LITT MER HER**
 
 Now we do the same with the mountain Chogolisa, which has height 7665 and prominence 1624. These are both inside the ranges for height and prominence in our data set. Using the previously derived formulas and values from the `r` printout, we get $\widehat{LP}_C = 13.69 - 0.001635 \cdot 7665 - 0.000174 \cdot 1624 = 0.875149$ and $\widehat{sd(LP)}_C = \sqrt{1.064^2 + 0.000142^2\cdot 7665^2 + 0.00004554^2\cdot 1624^2} = 1.52389$, which gives
 $$\hat{\pi}_C = \frac{\exp(\widehat{LP}_C)}{1+\exp(\widehat{LP}_C)} = \frac{\exp(0.875149)}{1+\exp(0.875149)} = 0.706.$$
 Or in words, the probability of successfully ascending Chogolisa is estimated to be $70.6 \%$.
 
-Finally we calculate a confidence interval for the probability, which gives
+Finally we calculate a $95\%$ confidence interval for the probability, which gives
 $$\pi_{C} \in \Bigg[\frac{\exp(0.875149 - 1.96\cdot 1.52389)}{1+\exp(0.875149 - 1.96\cdot 1.52389)}, \frac{\exp(0.875149 + 1.96\cdot 1.52389)}{1+\exp(0.875149 + 1.96\cdot 1.52389)}\Bigg] = \Bigg[0.1080 , 0.9794\Bigg].$$
 
 
@@ -268,7 +312,7 @@ Xsq <- chisq.test(contingency)
 print(Xsq)
 ```
 
-We get a value of $14.156$ for the test statistic, with a corresponding p-value of $0.5871$. As this p-value is above any reasonable significance level, we keep the null hypothesis, and confirm that the goals scored by the home and away team are independent. This means that our assumption of independence holds.
+We get a value of $14.156$ for the test statistic, with a corresponding p-value of $0.5871$. As this p-value is above any reasonable significance level, we keep the null hypothesis, and confirm that the goals scored by the home and away team are independent. This means that our assumption of independence is reasonable.
 
 ## b)
 
