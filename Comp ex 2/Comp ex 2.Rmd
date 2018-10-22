@@ -124,6 +124,7 @@ $$D = -2(\ln L(\text{candidate model}) - \ln L(\text{saturated model}))  = -2(l(
 Asymptotically, $D$ is distributed as $\chi^2$ with $G-p = 110$ degrees of freedom. We calculate the deviance and the p-value.
 ```{r, echo = F, eval = T}
 D = deviance(fit)
+cat("deviance: ", D)
 cat("p-value: ", 1 - pchisq(D,110))
 ```
 
@@ -141,7 +142,7 @@ $$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 
 Finally we can take the $\exp(\cdot)$ function of both limits of the interval, and we get that
 $$\exp(\beta_{\text{height}}) \in \big[\exp(\hat{\beta}_L),\exp(\hat{\beta}_H)\big] = \big[0.9981,0.9986 \big].$$
 
-In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95\%$ confidence that an increase in height of 1 meter means that the probability of a successful ascent will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$.
+In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95\%$ confidence that an increase in height of 1 meter means that the odds will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$.
 
 ## c)
 
@@ -154,21 +155,24 @@ df = data.frame(fitted = fit$fitted.values, dres = residual, height = mount$heig
 df['observations'] = df['success'] + df['fail']
 ggplot(df, aes(x = fitted, y = dres, size = observations)) + geom_point()
 ```
+
 The dots indicate a single covariate pattern (here a mountain or several mountains with identical height and prominence). The $x$-axis indicate the fitted probability of ascent success while the $y$-axis indicate the deviance residual. The size of the dots indicate the amount of observations (both failed and successful attempts). 
 
-We see some indication of a larger spread of the residuals towards higher probabilities and some non-centering around lower probabilites, but observe no obvious structure given the amount of data used. 
+We see some indication of a larger spread of the residuals towards higher probabilities and some non-centering around lower probabilites, but observe no obvious structure. 
 
 ```{r}
 ggplot(df, aes(x = height, y = dres, size = observations)) + geom_point()
 ```
 
-The $x$-axis now indicates height. Again we see a larger spread at at lower altitudes, but also that the covariate patterns at lower altitudes have a smaller amount of observations. Beyond that we see no apparent structure in the data. 
+The $x$-axis now indicates height. We see some larger spread at at lower altitudes, but also that the covariate patterns at lower altitudes have a smaller amount of observations. Beyond that we see no apparent structure in the data. 
 
 ```{r}
 ggplot(df, aes(x = prominence, y = dres, size = observations)) + geom_point()
 ```
 
 The $x$-axis now indicates prominence. We see no apparent structure inn the data. 
+
+Structure in the data would indicate that our model assumptions are unreasonable, and an obvious trend would enable us to discard the model. However, the lack of structure does not necessarily indicate that our model is good. It will therefore be important to validate the model predictions using observations excluded from the model data. 
 
 ```{r, echo = F, eval = T}
 height = rep(seq(min(mount$height), max(mount$height), length.out = 100), each = 100)
@@ -179,27 +183,8 @@ ggplot(df2, aes(x = height, y = prominence, fill = fitted)) + geom_raster() + ge
 ```
 We plot the predicted probability of ascent success (marked by color) as a function of `height` and `prominence`. The probability decreases with increasing `height` and `prominence`. The linear level curves are indicated by blue lines. We observe that the level curves are steep, indicating that `height` has a stronger model effect than `prominence`. This makes sense, as 
 $$ \frac{\hat{\beta}_{height}}{\hat{\beta}_{prominence}} = 9.4$$
-```{r, eval=T, echo=T}
-abs(fit$coefficients['height'] / fit$coefficients['prominence'])
-```
-
-
-
-Plotting the predicted probabilites as a function of `height` and `prominence` gives us 
 
 ## d)
-
-Based on the model we have fitted, we want to estimate the probability of successfully ascending Mount Everest, which has height and prominence both equal 8848 meters. The estimated odds will be equal to
-$$\frac{\hat{\pi}_{\text{M E}}}{1 - \hat{\pi}_{\text{M E}}} = \exp(\beta_I) \cdot \exp(\beta_h\cdot x_{ME,h}) \cdot\exp(\beta_p\cdot x_{ME,p}) = \exp(13.69) \cdot \exp(-0.001635\cdot 8848) \cdot\exp(-0.000174\cdot 8848) = 0.09866.$$
-This means that the estimated probability of successfully ascending Mount Everest will be
-$$\hat{\pi}_{\text{M E}} = \frac{0.09866}{1-0.09866} = 0.0898 \approx 9 \%.$$
-Or in text, the probability of successfully ascending Mount Everest is estimated to be $9 \%$.
-
-Now, we want to make a $95 \%$ confidence interval for the probability of successfully ascending Mount Everest. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
-$$
-\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).
-$$
-Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor to the corresponding probabilites and get a confidence interval for ascent success probability for Mount Everest and Chogolisia. 
 
 ```{r, echo=F, eval=T}
 x_ME <- c(1, 8848, 8848)
@@ -210,58 +195,79 @@ eta_CH <- t(x_CH)%*%fit$coefficients
 std_ME <- sqrt(t(x_ME) %*% vcov(fit) %*% x_ME)
 std_CH <- sqrt(t(x_CH) %*% vcov(fit) %*% x_CH)
 
-eta_limits_ME = c(eta_ME + qnorm(0.025) * std_ME, eta_ME + qnorm(0.975) * std_ME)
-eta_limits_CH = c(eta_CH + qnorm(0.025) * std_CH, eta_CH + qnorm(0.975) * std_CH)
+eta_limits_ME = c(eta_ME + qnorm(0.025) * std_ME, eta_ME, eta_ME + qnorm(0.975) * std_ME)
+eta_limits_CH = c(eta_CH + qnorm(0.025) * std_CH, eta_CH, eta_CH + qnorm(0.975) * std_CH)
 
 limits = rbind(eta_limits_ME, eta_limits_CH)
-rownames(limits) = c('Mt. Everest', 'Chogolisia')
-colnames(limits) = c('2.5%', '97.5%')
+rownames(limits) = c('Mt. Everest', 'Chogolisa')
+colnames(limits) = c('2.5%', '50 %', '97.5%')
 ```
+
+Based on the model we have fitted, we want to estimate the probability of successfully ascending Mount Everest (height and prominence both equal 8848m), and Chogolisa (height 7665m and prominence 1624m). We denote Mt. Everest for $x_1$ and Chogolisa for $x_2$. We use our fitted model to produce linear predictors $\eta_i$ for both summits. 
+
+```{r, eval=T, echo=F}
+limits[,2]
+```
+And we transform the linear predictors to probabilites using the response function $h(\eta) = \exp(\eta) / (1 + \exp(\eta))$,
+```{r, echo=F, eval=T}
+exp(limits[,2])/(1+ exp(limits[,2]))
+```
+
+We also want to make a $95 \%$ confidence interval for the probability of successfully ascending both summits. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
+$$
+\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).
+$$
+Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor CI to the corresponding probability CI and get an interval for ascent success probability for Mount Everest and Chogolisa. 
+
 For the linear predictor we get limits
-```{r, echo=T, eval=T}
+```{r, echo=F, eval=T}
 limits
 ```
 Which is transformed to the probabilites
-```{r, echo=T, eval=T}
+```{r, echo=F, eval=T}
 prob = exp(limits)/(1 + exp(limits))
 prob
 ```
 
-, as we did when we made a confidence interval for $\beta_h$ in part 1b). In the same way as we did in part 1b), we get the coefficient estimates and the estimated standard deviations from the `r` printout, from which we can construct a confidence interval for the linear predictor $LP = \beta_I + \beta_hx_{ME,h} + \beta_px_{ME,p}$. We denote by $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ the estimated linear predictor, 
+The probability of reaching Mt. Everest is considerably smaller than for Chogolisa, with a predicted probability of $8.9\%$ and a $95\%$ confidence interval of $[5.5\%, 14.2\%]$. We note that the both the height and prominence of Mt. Everest are outside the data range used to fit the model. The prominence is almost double that of the greatest value in the data range. Thus we have no way to control if the model assumptions are valid for such large values of height and prominence. It is therefore not reasonable to use this model to estimate the probability of ascending Mt. Everest. In fact, common estimates for Mt. Everest success probability are $\sim 50\%$. 
 
-and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$ the standard deviation for the estimated linear predictor.
+The model predicts the success rate for Chogolisa to be $70.4\%$ with a $95\%$ CI of $[68.3\%, 72.5\%]$. The height and prominence of Chogolisa lies inside the range of the data used to fit the model and it is reasonable to use the model to estimate this success rate. Even so, the observed data from Chogolisa, $20$ successes and $2$ failures, gives a success rate of $\frac{20}{22} = 0.91$, which is higher than the computed CI. Chogolisa is somewhat of an outlier, as the success rate of summits in our data set with height less than 8000m and prominence between 1000m and 2000m is $0.76$. Nevertheless, this discrepancy indicates that our modelled response is highly variable and model predictions should be used with caution. 
 
-$\hat{\beta_i}$ ER IKKE NØDVENDIGVIS UAVHENGIGE OG VI MÅ DERFOR TA MED KOVARIANSLEDDENE, eller?
+```{r, echo=F}
+smaller_summits = mount[mount$height <= 8000 & mount$prominence <= 2000 & mount$prominence >= 1000, ]
+sum(smaller_summits['success']) / (sum(smaller_summits['success']) + sum(smaller_summits['fail']))
+```
 
-Again, we denote $c_{jj}$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$, so $c_jj$ will be the variance of $\hat{\beta}_j$. Then, we get that
-$$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$
 
-We can then make a $95 \%$ confidence interval for the linear predictor, which will be
-$$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$
+<!-- Again, we denote $c_{jj}$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$, so $c_jj$ will be the variance of $\hat{\beta}_j$. Then, we get that -->
+<!-- $$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$ -->
 
-Then we take the $\exp()$ function of both limits of the interval, and we get that
-$$\exp(LP) \in \big[\exp\big(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}\big), \ \exp\big(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big)\big].$$
+<!-- We can then make a $95 \%$ confidence interval for the linear predictor, which will be -->
+<!-- $$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$ -->
 
-Earlier, we have found that
-$$\frac{\pi_i}{1-\pi_i} = \exp(LP),$$
-which means that
-$$\pi_i = \frac{\exp(LP)}{1+\exp(LP)}.$$
-We can then get the formula for a $95 \%$ confidence interval for the probability of a successfull ascent by 
-$$\pi_{ME} \in \Bigg[\frac{\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}, \frac{\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}\Bigg],$$
-where $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$.
+<!-- Then we take the $\exp()$ function of both limits of the interval, and we get that -->
+<!-- $$\exp(LP) \in \big[\exp\big(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}\big), \ \exp\big(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big)\big].$$ -->
 
-Inserting values from the `r` printout, we get that $\widehat{LP} = 13.69 - 0.001635 \cdot 8848 - 0.000174 \cdot 8848 = -2.316$, $z_{0.025} = 1.96$ and $\widehat{sd(LP)} = \sqrt{1.064^2 + 0.000142^2\cdot 8848^2 + 0.00004554^2\cdot 8848^2} = 1.695$. Finally, computing the confidence interval, we get
+<!-- Earlier, we have found that -->
+<!-- $$\frac{\pi_i}{1-\pi_i} = \exp(LP),$$ -->
+<!-- which means that -->
+<!-- $$\pi_i = \frac{\exp(LP)}{1+\exp(LP)}.$$ -->
+<!-- We can then get the formula for a $95 \%$ confidence interval for the probability of a successfull ascent by  -->
+<!-- $$\pi_{ME} \in \Bigg[\frac{\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}, \frac{\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}\Bigg],$$ -->
+<!-- where $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$. -->
 
-$$\pi_{ME} \in \Bigg[\frac{\exp(-2.316 - 1.96\cdot 1.695)}{1+\exp(-2.316 - 1.96\cdot 1.695)}, \frac{\exp(-2.316 + 1.96\cdot 1.695)}{1+\exp(-2.316 + 1.96\cdot 1.695)}\Bigg] = \Bigg[0.00354 , 0.7322\Bigg].$$
+<!-- Inserting values from the `r` printout, we get that $\widehat{LP} = 13.69 - 0.001635 \cdot 8848 - 0.000174 \cdot 8848 = -2.316$, $z_{0.025} = 1.96$ and $\widehat{sd(LP)} = \sqrt{1.064^2 + 0.000142^2\cdot 8848^2 + 0.00004554^2\cdot 8848^2} = 1.695$. Finally, computing the confidence interval, we get -->
 
-Mount Everest has prominence of 8848 and height of 8848, which are both outside the data range used to fit the model. We therefore have no way to control if the model is valid for this range, and can therefore not argue that the predicted probabilites are a good approximation. Therefore, it is not reasonable to estimate the probability of climbing Mount Everest with this model. In addition, the confidence interval is really large (almost the whole range of the response [0,1]), and thus quite useless. **SKRIV KANSKJE LITT MER HER**
+<!-- $$\pi_{ME} \in \Bigg[\frac{\exp(-2.316 - 1.96\cdot 1.695)}{1+\exp(-2.316 - 1.96\cdot 1.695)}, \frac{\exp(-2.316 + 1.96\cdot 1.695)}{1+\exp(-2.316 + 1.96\cdot 1.695)}\Bigg] = \Bigg[0.00354 , 0.7322\Bigg].$$ -->
 
-Now we do the same with the mountain Chogolisa, which has height 7665 and prominence 1624. These are both inside the ranges for height and prominence in our data set. Using the previously derived formulas and values from the `r` printout, we get $\widehat{LP}_C = 13.69 - 0.001635 \cdot 7665 - 0.000174 \cdot 1624 = 0.875149$ and $\widehat{sd(LP)}_C = \sqrt{1.064^2 + 0.000142^2\cdot 7665^2 + 0.00004554^2\cdot 1624^2} = 1.52389$, which gives
-$$\hat{\pi}_C = \frac{\exp(\widehat{LP}_C)}{1+\exp(\widehat{LP}_C)} = \frac{\exp(0.875149)}{1+\exp(0.875149)} = 0.706.$$
-Or in words, the probability of successfully ascending Chogolisa is estimated to be $70.6 \%$.
+<!-- Mount Everest has prominence of 8848 and height of 8848, which are both outside the data range used to fit the model. We therefore have no way to control if the model is valid for this range, and can therefore not argue that the predicted probabilites are a good approximation. Therefore, it is not reasonable to estimate the probability of climbing Mount Everest with this model. In addition, the confidence interval is really large (almost the whole range of the response [0,1]), and thus quite useless. **SKRIV KANSKJE LITT MER HER** -->
 
-Finally we calculate a $95\%$ confidence interval for the probability, which gives
-$$\pi_{C} \in \Bigg[\frac{\exp(0.875149 - 1.96\cdot 1.52389)}{1+\exp(0.875149 - 1.96\cdot 1.52389)}, \frac{\exp(0.875149 + 1.96\cdot 1.52389)}{1+\exp(0.875149 + 1.96\cdot 1.52389)}\Bigg] = \Bigg[0.1080 , 0.9794\Bigg].$$
+<!-- Now we do the same with the mountain Chogolisa, which has height 7665 and prominence 1624. These are both inside the ranges for height and prominence in our data set. Using the previously derived formulas and values from the `r` printout, we get $\widehat{LP}_C = 13.69 - 0.001635 \cdot 7665 - 0.000174 \cdot 1624 = 0.875149$ and $\widehat{sd(LP)}_C = \sqrt{1.064^2 + 0.000142^2\cdot 7665^2 + 0.00004554^2\cdot 1624^2} = 1.52389$, which gives -->
+<!-- $$\hat{\pi}_C = \frac{\exp(\widehat{LP}_C)}{1+\exp(\widehat{LP}_C)} = \frac{\exp(0.875149)}{1+\exp(0.875149)} = 0.706.$$ -->
+<!-- Or in words, the probability of successfully ascending Chogolisa is estimated to be $70.6 \%$. -->
+
+<!-- Finally we calculate a $95\%$ confidence interval for the probability, which gives -->
+<!-- $$\pi_{C} \in \Bigg[\frac{\exp(0.875149 - 1.96\cdot 1.52389)}{1+\exp(0.875149 - 1.96\cdot 1.52389)}, \frac{\exp(0.875149 + 1.96\cdot 1.52389)}{1+\exp(0.875149 + 1.96\cdot 1.52389)}\Bigg] = \Bigg[0.1080 , 0.9794\Bigg].$$ -->
 
 
 **SPØR INGEBORG OM DET ER 20 ELLER 4 SUCCESS FOR CHOGOLISA**
