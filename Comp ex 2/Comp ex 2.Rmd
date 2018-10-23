@@ -710,41 +710,51 @@ We see that the "boxes" (quartile 2 and 3) of Rosenborg, Brann, Molde and Hauges
 Finally we include all code written in this document.
 
 ```{r, echo = T, eval = F}
+# Load the data
 filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/mountains"
 mount <- read.table(file = filepath, header = TRUE, col.names = c("height", 
     "prominence", "fail", "success"))
+# Fit the model
 fit = glm(cbind(success, fail) ~ height + prominence, data = mount, family = "binomial")
+# Print summary
 summary(fit)
 
+# Calculate deviance, and print values from deviance test
 D = deviance(fit)
 cat("deviance: ", D)
 cat("p-value: ", 1 - pchisq(D,110))
 
+# Fit the residuals
 library(ggplot2)
 residual = residuals(fit, type = "deviance")
 df = data.frame(fitted = fit$fitted.values, dres = residual, height = mount$height, prominence = mount$prominence, success = (fit$data['success']), fail = (fit$data['fail']))
 df['observations'] = df['success'] + df['fail']
+# Vs. fitted
 ggplot(df, aes(x = fitted, y = dres, size = observations)) + geom_point()
-
-
+# Vs. height
 ggplot(df, aes(x = height, y = dres, size = observations)) + geom_point()
-
+# Vs. prominence
 ggplot(df, aes(x = prominence, y = dres, size = observations)) + geom_point()
 
+# Make "Contour plot"
 height = rep(seq(min(mount$height), max(mount$height), length.out = 100), each = 100)
 prominence = rep(seq(min(mount$prominence), max(mount$prominence), length.out = 100),100)
 
 df2 = data.frame(fitted = exp(fit$coefficients[1] + fit$coefficients[2]*height + fit$coefficients[3]*prominence)/(1+exp(fit$coefficients[2]*height+fit$coefficients[3]*prominence+fit$coefficients[1])), height = height, prominence = prominence)
 ggplot(df2, aes(x = height, y = prominence, fill = fitted)) + geom_raster() + geom_contour(aes(z = fitted)) + scale_fill_gradientn(colours = terrain.colors(10)) + labs(x = "height", y = "prominence")
 
+# Intercept, height and prominence for Mount Everest and Chogolisa
 x_ME <- c(1, 8848, 8848)
 x_CH <- c(1, 7665, 1624)
 
+# Linear predictors
 eta_ME <- t(x_ME)%*%fit$coefficients
 eta_CH <- t(x_CH)%*%fit$coefficients
+# Std. deviations
 std_ME <- sqrt(t(x_ME) %*% vcov(fit) %*% x_ME)
 std_CH <- sqrt(t(x_CH) %*% vcov(fit) %*% x_CH)
 
+# Limits for conf int of linear predictor
 eta_limits_ME = c(eta_ME + qnorm(0.025) * std_ME, eta_ME, eta_ME + qnorm(0.975) * std_ME)
 eta_limits_CH = c(eta_CH + qnorm(0.025) * std_CH, eta_CH, eta_CH + qnorm(0.975) * std_CH)
 
@@ -757,7 +767,7 @@ limits[,2]
 exp(limits[,2])/(1+ exp(limits[,2]))
 
 limits
-
+# Confidence intervals for the probabilities
 prob = exp(limits)/(1 + exp(limits))
 prob
 
@@ -1103,5 +1113,3 @@ print(confidence_intervals)
 # Plot boxplot of points for each team to compare points of each team
 boxplot(points)
 ```
-``` 
-
