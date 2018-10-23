@@ -161,7 +161,7 @@ We see some indication of a larger spread of the residuals towards higher probab
 ggplot(df, aes(x = height, y = dres, size = observations)) + geom_point()
 ```
 
-The $x$-axis now indicates height. We see some larger spread at at lower altitudes, but note that there are only a small amount of summits with height above 8000m and it is quite natural to observe fewer outliers. We also observe a slight tendency towards negative residuals at greater altitudes with the exception of the two highest summits. This might indicate that there is some covariate that separates the summits above 8km. This further supports our claim that the model can be improved with the inclusion of additional covariate, e.g. eg some measure of summit infrastructure (amount of base camps).
+The $x$-axis now indicates height. We see some larger spread at at lower altitudes, but note that there are only a small amount of summits with height above 8000m and it is quite natural to observe fewer outliers. We also observe a slight tendency towards negative residuals at greater altitudes with the exception of the two highest summits. This might indicate that there is some covariate that separates the summits above 8km. This further supports our claim that the model can be improved with the inclusion of additional covariate, e.g. some measure of summit infrastructure (amount of base camps).
 
 ```{r}
 ggplot(df, aes(x = prominence, y = dres, size = observations)) + geom_point()
