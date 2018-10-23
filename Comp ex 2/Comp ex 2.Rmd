@@ -214,10 +214,24 @@ exp(limits[,2])/(1+ exp(limits[,2]))
 ```
 
 We also want to make a $95 \%$ confidence interval for the probability of successfully ascending both summits. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
-$$
-\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).
-$$
-Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor CI to the corresponding probability CI and get an interval for ascent success probability for Mount Everest and Chogolisa. 
+$$\widehat{LP}=\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).$$
+Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor CI to the corresponding probability CI and get an interval for ascent success probability for Mount Everest and Chogolisa.
+As the estimated linear predictor is normally distributed, we get that
+$$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$
+
+We can then make a $95 \%$ confidence interval for the linear predictor, which will be
+$$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$
+
+Then we take the $\exp()$ function of both limits of the interval, and we get that
+$$\exp(LP) \in \big[\exp\big(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}\big), \ \exp\big(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big)\big].$$
+
+Earlier, we have found that
+$$\frac{\pi_i}{1-\pi_i} = \exp(LP),$$
+which means that
+$$\pi_i = \frac{\exp(LP)}{1+\exp(LP)}.$$
+We can then get the formula for a $95 \%$ confidence interval for the probability of a successfull ascent by
+$$\pi_{ME} \in \Bigg[\frac{\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}, \frac{\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}\Bigg],$$
+where $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ and $\widehat{sd(LP)} = \sqrt{x_i^TF^{-1}(\hat{\boldsymbol \beta})x_i}$.
 
 For the linear predictor we get limits
 ```{r, echo=F, eval=T}
@@ -237,41 +251,6 @@ The model predicts the success rate for Chogolisa to be $70.4\%$ with a $95\%$ C
 smaller_summits = mount[mount$height <= 8000 & mount$prominence <= 2000 & mount$prominence >= 1000, ]
 sum(smaller_summits['success']) / (sum(smaller_summits['success']) + sum(smaller_summits['fail']))
 ```
-
-
-<!-- Again, we denote $c_{jj}$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$, so $c_jj$ will be the variance of $\hat{\beta}_j$. Then, we get that -->
-<!-- $$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$ -->
-
-<!-- We can then make a $95 \%$ confidence interval for the linear predictor, which will be -->
-<!-- $$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$ -->
-
-<!-- Then we take the $\exp()$ function of both limits of the interval, and we get that -->
-<!-- $$\exp(LP) \in \big[\exp\big(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}\big), \ \exp\big(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big)\big].$$ -->
-
-<!-- Earlier, we have found that -->
-<!-- $$\frac{\pi_i}{1-\pi_i} = \exp(LP),$$ -->
-<!-- which means that -->
-<!-- $$\pi_i = \frac{\exp(LP)}{1+\exp(LP)}.$$ -->
-<!-- We can then get the formula for a $95 \%$ confidence interval for the probability of a successfull ascent by  -->
-<!-- $$\pi_{ME} \in \Bigg[\frac{\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}, \frac{\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}\Bigg],$$ -->
-<!-- where $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$. -->
-
-<!-- Inserting values from the `r` printout, we get that $\widehat{LP} = 13.69 - 0.001635 \cdot 8848 - 0.000174 \cdot 8848 = -2.316$, $z_{0.025} = 1.96$ and $\widehat{sd(LP)} = \sqrt{1.064^2 + 0.000142^2\cdot 8848^2 + 0.00004554^2\cdot 8848^2} = 1.695$. Finally, computing the confidence interval, we get -->
-
-<!-- $$\pi_{ME} \in \Bigg[\frac{\exp(-2.316 - 1.96\cdot 1.695)}{1+\exp(-2.316 - 1.96\cdot 1.695)}, \frac{\exp(-2.316 + 1.96\cdot 1.695)}{1+\exp(-2.316 + 1.96\cdot 1.695)}\Bigg] = \Bigg[0.00354 , 0.7322\Bigg].$$ -->
-
-<!-- Mount Everest has prominence of 8848 and height of 8848, which are both outside the data range used to fit the model. We therefore have no way to control if the model is valid for this range, and can therefore not argue that the predicted probabilites are a good approximation. Therefore, it is not reasonable to estimate the probability of climbing Mount Everest with this model. In addition, the confidence interval is really large (almost the whole range of the response [0,1]), and thus quite useless. **SKRIV KANSKJE LITT MER HER** -->
-
-<!-- Now we do the same with the mountain Chogolisa, which has height 7665 and prominence 1624. These are both inside the ranges for height and prominence in our data set. Using the previously derived formulas and values from the `r` printout, we get $\widehat{LP}_C = 13.69 - 0.001635 \cdot 7665 - 0.000174 \cdot 1624 = 0.875149$ and $\widehat{sd(LP)}_C = \sqrt{1.064^2 + 0.000142^2\cdot 7665^2 + 0.00004554^2\cdot 1624^2} = 1.52389$, which gives -->
-<!-- $$\hat{\pi}_C = \frac{\exp(\widehat{LP}_C)}{1+\exp(\widehat{LP}_C)} = \frac{\exp(0.875149)}{1+\exp(0.875149)} = 0.706.$$ -->
-<!-- Or in words, the probability of successfully ascending Chogolisa is estimated to be $70.6 \%$. -->
-
-<!-- Finally we calculate a $95\%$ confidence interval for the probability, which gives -->
-<!-- $$\pi_{C} \in \Bigg[\frac{\exp(0.875149 - 1.96\cdot 1.52389)}{1+\exp(0.875149 - 1.96\cdot 1.52389)}, \frac{\exp(0.875149 + 1.96\cdot 1.52389)}{1+\exp(0.875149 + 1.96\cdot 1.52389)}\Bigg] = \Bigg[0.1080 , 0.9794\Bigg].$$ -->
-
-
-**SPØR INGEBORG OM DET ER 20 ELLER 4 SUCCESS FOR CHOGOLISA**
-
 
 
 # Part 2: Poisson regression - Eliteserien 2018
