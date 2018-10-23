@@ -109,9 +109,7 @@ $$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol
 We denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$ and get that for each coefficient $\beta_j$,
 $$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
 We can test the significance of the $\beta_j$ using the test statistics 
-$$ 
-z_j = \frac{\hat{\beta}_j - 0}{\sqrt{c_{jj}}}.
-$$
+$$ z_j = \frac{\hat{\beta}_j - 0}{\sqrt{c_{jj}}}.$$
 
 We read the values of the test statistics from the summary above, and get $z_0 = 12.861, z_1 = -11.521, z_2 = -3.821$. This gives p-values of $p_0 < 2\cdot 10^{-16}, p_1 < 2 \cdot 10^{-16}, p_2 = 0.000133$. All these p-values are below any reasonable significance level, so we reject the null-hypothesis for all parameters. This means that all the parameters are significant. 
 
@@ -128,8 +126,7 @@ cat("deviance: ", D)
 cat("p-value: ", 1 - pchisq(D,110))
 ```
 
-Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model.
-**SE LITT MER PÅ DENNE DELEN SENERE**
+Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model. The model could be improved if we included additional covariates, e.g. weather, amount of avalanches, "fitness" of climber, etc.
 
 Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Or equivalently
 $$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
@@ -215,10 +212,24 @@ exp(limits[,2])/(1+ exp(limits[,2]))
 ```
 
 We also want to make a $95 \%$ confidence interval for the probability of successfully ascending both summits. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
-$$
-\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).
-$$
-Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor CI to the corresponding probability CI and get an interval for ascent success probability for Mount Everest and Chogolisa. 
+$$\widehat{LP}=\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).$$
+Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor CI to the corresponding probability CI and get an interval for ascent success probability for Mount Everest and Chogolisa.
+As the estimated linear predictor is normally distributed, we get that
+$$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$
+
+We can then make a $95 \%$ confidence interval for the linear predictor, which will be
+$$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$
+
+Then we take the $\exp()$ function of both limits of the interval, and we get that
+$$\exp(LP) \in \big[\exp\big(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}\big), \ \exp\big(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big)\big].$$
+
+Earlier, we have found that
+$$\frac{\pi_i}{1-\pi_i} = \exp(LP),$$
+which means that
+$$\pi_i = \frac{\exp(LP)}{1+\exp(LP)}.$$
+We can then get the formula for a $95 \%$ confidence interval for the probability of a successfull ascent by
+$$\pi_{ME} \in \Bigg[\frac{\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}, \frac{\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}\Bigg],$$
+where $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ and $\widehat{sd(LP)} = \sqrt{x_i^TF^{-1}(\hat{\boldsymbol \beta})x_i}$.
 
 For the linear predictor we get limits
 ```{r, echo=F, eval=T}
@@ -238,41 +249,6 @@ The model predicts the success rate for Chogolisa to be $70.4\%$ with a $95\%$ C
 smaller_summits = mount[mount$height <= 8000 & mount$prominence <= 2000 & mount$prominence >= 1000, ]
 sum(smaller_summits['success']) / (sum(smaller_summits['success']) + sum(smaller_summits['fail']))
 ```
-
-
-<!-- Again, we denote $c_{jj}$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$, so $c_jj$ will be the variance of $\hat{\beta}_j$. Then, we get that -->
-<!-- $$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$ -->
-
-<!-- We can then make a $95 \%$ confidence interval for the linear predictor, which will be -->
-<!-- $$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$ -->
-
-<!-- Then we take the $\exp()$ function of both limits of the interval, and we get that -->
-<!-- $$\exp(LP) \in \big[\exp\big(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}\big), \ \exp\big(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big)\big].$$ -->
-
-<!-- Earlier, we have found that -->
-<!-- $$\frac{\pi_i}{1-\pi_i} = \exp(LP),$$ -->
-<!-- which means that -->
-<!-- $$\pi_i = \frac{\exp(LP)}{1+\exp(LP)}.$$ -->
-<!-- We can then get the formula for a $95 \%$ confidence interval for the probability of a successfull ascent by  -->
-<!-- $$\pi_{ME} \in \Bigg[\frac{\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)})}, \frac{\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}{1+\exp(\widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)})}\Bigg],$$ -->
-<!-- where $\widehat{LP} = \hat{\beta}_I+\hat{\beta}_h\cdot x_{ME,h} + \hat{\beta}_p \cdot x_{ME,p}$ and $\widehat{sd(LP)} = \sqrt{c_{00}+c_{11}\cdot x_{ME,h}^2+c_{22}\cdot x_{ME,p}^2}$. -->
-
-<!-- Inserting values from the `r` printout, we get that $\widehat{LP} = 13.69 - 0.001635 \cdot 8848 - 0.000174 \cdot 8848 = -2.316$, $z_{0.025} = 1.96$ and $\widehat{sd(LP)} = \sqrt{1.064^2 + 0.000142^2\cdot 8848^2 + 0.00004554^2\cdot 8848^2} = 1.695$. Finally, computing the confidence interval, we get -->
-
-<!-- $$\pi_{ME} \in \Bigg[\frac{\exp(-2.316 - 1.96\cdot 1.695)}{1+\exp(-2.316 - 1.96\cdot 1.695)}, \frac{\exp(-2.316 + 1.96\cdot 1.695)}{1+\exp(-2.316 + 1.96\cdot 1.695)}\Bigg] = \Bigg[0.00354 , 0.7322\Bigg].$$ -->
-
-<!-- Mount Everest has prominence of 8848 and height of 8848, which are both outside the data range used to fit the model. We therefore have no way to control if the model is valid for this range, and can therefore not argue that the predicted probabilites are a good approximation. Therefore, it is not reasonable to estimate the probability of climbing Mount Everest with this model. In addition, the confidence interval is really large (almost the whole range of the response [0,1]), and thus quite useless. **SKRIV KANSKJE LITT MER HER** -->
-
-<!-- Now we do the same with the mountain Chogolisa, which has height 7665 and prominence 1624. These are both inside the ranges for height and prominence in our data set. Using the previously derived formulas and values from the `r` printout, we get $\widehat{LP}_C = 13.69 - 0.001635 \cdot 7665 - 0.000174 \cdot 1624 = 0.875149$ and $\widehat{sd(LP)}_C = \sqrt{1.064^2 + 0.000142^2\cdot 7665^2 + 0.00004554^2\cdot 1624^2} = 1.52389$, which gives -->
-<!-- $$\hat{\pi}_C = \frac{\exp(\widehat{LP}_C)}{1+\exp(\widehat{LP}_C)} = \frac{\exp(0.875149)}{1+\exp(0.875149)} = 0.706.$$ -->
-<!-- Or in words, the probability of successfully ascending Chogolisa is estimated to be $70.6 \%$. -->
-
-<!-- Finally we calculate a $95\%$ confidence interval for the probability, which gives -->
-<!-- $$\pi_{C} \in \Bigg[\frac{\exp(0.875149 - 1.96\cdot 1.52389)}{1+\exp(0.875149 - 1.96\cdot 1.52389)}, \frac{\exp(0.875149 + 1.96\cdot 1.52389)}{1+\exp(0.875149 + 1.96\cdot 1.52389)}\Bigg] = \Bigg[0.1080 , 0.9794\Bigg].$$ -->
-
-
-**SPØR INGEBORG OM DET ER 20 ELLER 4 SUCCESS FOR CHOGOLISA**
-
 
 
 # Part 2: Poisson regression - Eliteserien 2018
@@ -707,3 +683,410 @@ boxplot(points)
 ```
 
 We see that the "boxes" (quartile 2 and 3) of Rosenborg, Brann, Molde and Haugesund are non-overlapping. This suggests that this will be the final standing among the top four in the table. Meanwhile, Sandefjord's box is some distance behind Start's box, emphasizing that Sandefjord will get relegated. Yet, there is still possibility for Start and Stabæk to avoid relegation/play-off. 
+
+Finally we include all code written in this document.
+
+```{r, echo = T, eval = F}
+# Load the data
+filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/mountains"
+mount <- read.table(file = filepath, header = TRUE, col.names = c("height", 
+    "prominence", "fail", "success"))
+# Fit the model
+fit = glm(cbind(success, fail) ~ height + prominence, data = mount, family = "binomial")
+# Print summary
+summary(fit)
+
+# Calculate deviance, and print values from deviance test
+D = deviance(fit)
+cat("deviance: ", D)
+cat("p-value: ", 1 - pchisq(D,110))
+
+# Fit the residuals
+library(ggplot2)
+residual = residuals(fit, type = "deviance")
+df = data.frame(fitted = fit$fitted.values, dres = residual, height = mount$height, prominence = mount$prominence, success = (fit$data['success']), fail = (fit$data['fail']))
+df['observations'] = df['success'] + df['fail']
+# Vs. fitted
+ggplot(df, aes(x = fitted, y = dres, size = observations)) + geom_point()
+# Vs. height
+ggplot(df, aes(x = height, y = dres, size = observations)) + geom_point()
+# Vs. prominence
+ggplot(df, aes(x = prominence, y = dres, size = observations)) + geom_point()
+
+# Make "Contour plot"
+height = rep(seq(min(mount$height), max(mount$height), length.out = 100), each = 100)
+prominence = rep(seq(min(mount$prominence), max(mount$prominence), length.out = 100),100)
+
+df2 = data.frame(fitted = exp(fit$coefficients[1] + fit$coefficients[2]*height + fit$coefficients[3]*prominence)/(1+exp(fit$coefficients[2]*height+fit$coefficients[3]*prominence+fit$coefficients[1])), height = height, prominence = prominence)
+ggplot(df2, aes(x = height, y = prominence, fill = fitted)) + geom_raster() + geom_contour(aes(z = fitted)) + scale_fill_gradientn(colours = terrain.colors(10)) + labs(x = "height", y = "prominence")
+
+# Intercept, height and prominence for Mount Everest and Chogolisa
+x_ME <- c(1, 8848, 8848)
+x_CH <- c(1, 7665, 1624)
+
+# Linear predictors
+eta_ME <- t(x_ME)%*%fit$coefficients
+eta_CH <- t(x_CH)%*%fit$coefficients
+# Std. deviations
+std_ME <- sqrt(t(x_ME) %*% vcov(fit) %*% x_ME)
+std_CH <- sqrt(t(x_CH) %*% vcov(fit) %*% x_CH)
+
+# Limits for conf int of linear predictor
+eta_limits_ME = c(eta_ME + qnorm(0.025) * std_ME, eta_ME, eta_ME + qnorm(0.975) * std_ME)
+eta_limits_CH = c(eta_CH + qnorm(0.025) * std_CH, eta_CH, eta_CH + qnorm(0.975) * std_CH)
+
+limits = rbind(eta_limits_ME, eta_limits_CH)
+rownames(limits) = c('Mt. Everest', 'Chogolisa')
+colnames(limits) = c('2.5%', '50 %', '97.5%')
+
+limits[,2]
+
+exp(limits[,2])/(1+ exp(limits[,2]))
+
+limits
+# Confidence intervals for the probabilities
+prob = exp(limits)/(1 + exp(limits))
+prob
+
+smaller_summits = mount[mount$height <= 8000 & mount$prominence <= 2000 & mount$prominence >= 1000, ]
+sum(smaller_summits['success']) / (sum(smaller_summits['success']) + sum(smaller_summits['fail']))
+
+# Load results of matches
+filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/eliteserien2018"
+eliteserie <- read.table(file = filepath, header = TRUE, colClasses = c("character", 
+    "character", "numeric", "numeric"))
+
+# Initialize contingency table 
+contingency = matrix(rep(0,25),nrow = 5, ncol = 5)
+rownames(contingency) = c("0","1","2","3","4+")
+colnames(contingency) = c("0","1","2","3","4+")
+
+# Compute values of the contingency table
+for (i in 1:dim(eliteserie)[1]){
+  if (eliteserie[i,3]<4 & eliteserie[i,4]<4){
+    contingency[eliteserie[i,3]+1,eliteserie[i,4]+1] = contingency[eliteserie[i,3]+1,eliteserie[i,4]+1]+1
+  }  else if (eliteserie[i,3]<4 & !eliteserie[i,4]<4){
+    contingency[eliteserie[i,3]+1,5] = contingency[eliteserie[i,3]+1,5] + 1
+  }  else if (!eliteserie[i,3]<4 & eliteserie[i,4]<4){
+    contingency[5,eliteserie[i,4]+1] = contingency[5, eliteserie[i,4]+1] + 1
+  }  else{
+    contingency[5,5] = contingency[5,5] + 1
+  }
+}
+# Finally print the contingency table
+print(contingency)
+
+Xsq <- chisq.test(contingency)
+print(Xsq)
+
+# Initialize the current standings (ranking) for the teams
+ranking = data.frame(
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"), Played = 0, Won = 0, Drawn = 0, Lost = 0, For = 0, Against = 0, GD = 0, Points = 0,
+  stringsAsFactors = FALSE)
+
+# Compute the standings by summing up over all matches
+for (i in 1:dim(eliteserie)[1]){
+  # First add number of matches played for both home team
+  ranking[match(eliteserie[i,1], ranking[,1]),2] = ranking[match(eliteserie[i,1], ranking[,1]),2] + 1
+  # and for the away team
+  ranking[match(eliteserie[i,2], ranking[,1]),2] = ranking[match(eliteserie[i,2], ranking[,1]),2] + 1
+  
+  # Then add goals for and against home team
+  ranking[match(eliteserie[i,1], ranking[,1]),6] = ranking[match(eliteserie[i,1], ranking[,1]),6] + eliteserie[i,3]
+  ranking[match(eliteserie[i,1], ranking[,1]),7] = ranking[match(eliteserie[i,1], ranking[,1]),7] + eliteserie[i,4]
+  # and for and against away team
+  ranking[match(eliteserie[i,2], ranking[,1]),6] = ranking[match(eliteserie[i,2], ranking[,1]),6] + eliteserie[i,4]
+  ranking[match(eliteserie[i,2], ranking[,1]),7] = ranking[match(eliteserie[i,2], ranking[,1]),7] + eliteserie[i,3]
+  
+  # Then count wins, draws and losses for home team
+  ranking[match(eliteserie[i,1], ranking[,1]),3] = ranking[match(eliteserie[i,1], ranking[,1]),3] + as.numeric(eliteserie[i,3]>eliteserie[i,4])
+  ranking[match(eliteserie[i,1], ranking[,1]),4] = ranking[match(eliteserie[i,1], ranking[,1]),4] + as.numeric(eliteserie[i,3]==eliteserie[i,4])
+  ranking[match(eliteserie[i,1], ranking[,1]),5] = ranking[match(eliteserie[i,1], ranking[,1]),5] + as.numeric(eliteserie[i,4]>eliteserie[i,3])
+  
+  # Finally count wins, draws and losses for away team
+  ranking[match(eliteserie[i,2], ranking[,1]),3] = ranking[match(eliteserie[i,2], ranking[,1]),3] + as.numeric(eliteserie[i,3]<eliteserie[i,4])
+  ranking[match(eliteserie[i,2], ranking[,1]),4] = ranking[match(eliteserie[i,2], ranking[,1]),4] + as.numeric(eliteserie[i,3]==eliteserie[i,4])
+  ranking[match(eliteserie[i,2], ranking[,1]),5] = ranking[match(eliteserie[i,2], ranking[,1]),5] + as.numeric(eliteserie[i,4]<eliteserie[i,3])
+}
+# Points is computed by 3 points for win, 1 for draw and 0 for loss
+ranking[,9] = 3*ranking[,3] + ranking[,4]
+# Goal difference is goals scored minus goals conceded
+ranking[,8] = ranking[,6] - ranking[,7]
+# We rank the teams first by points, then goal difference, finally by goals scored
+ranking = ranking[order(ranking$Points, ranking$GD, ranking$For, decreasing = T),]
+# Rename rows after sorting
+row.names(ranking) <- seq(1,16)
+# Display the standings
+print(ranking)
+
+# Initialize the design matrix X, which is a 2*192 x 18 matrix.
+X = matrix(0, nrow = dim(eliteserie)[1]*2, ncol = 18)
+colnames(X) = c("Intercept", "HomeAdvantage", "Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt")
+
+# First we alter the design matrix for all "home games"
+for (i in 1:dim(eliteserie)[1]){
+  # Intercept
+  X[i,1] = 1
+  
+  # Home team gets x_home = 1
+  X[i,2] = 1
+  
+  # x_homeTeam is set to 1
+  X[i, match(eliteserie[i,1], dimnames(X)[[2]])] = 1
+  
+  # x_awayTeam is set to -1
+  X[i, match(eliteserie[i,2], dimnames(X)[[2]])] = -1
+}
+
+# Then alter design matrix for all "away games"
+for (i in 1:dim(eliteserie)[1]){
+  # Intercept
+  X[dim(eliteserie)[1] + i,1] = 1
+  
+  # Away team, so x_home = 0
+  
+  # x_homeTeam is set to -1
+  X[dim(eliteserie)[1] + i, match(eliteserie[i,1], dimnames(X)[[2]])] = -1
+  
+  # x_awayTeam is set to 1
+  X[dim(eliteserie)[1] + i, match(eliteserie[i,2], dimnames(X)[[2]])] = 1
+}
+
+# And we now have the desired design matrix
+
+# We then make the response vector (first all home goals, then all away goals)
+goals = c(eliteserie[,3], eliteserie[,4])
+
+# Finally we create the function that does the regression
+myglm <- function(formula, data = list(), contrasts = NULL, ...){
+  
+  # Extract model matrix & responses
+  mf <- model.frame(formula = formula, data = data)
+  X  <- model.matrix(attr(mf, "terms"), data = mf, contrasts.arg = contrasts)
+  y  <- model.response(mf)
+  terms <- attr(mf, "terms")
+
+  # Add code here to calculate coefficients, residuals, fitted values, etc...
+  # and store the results in the list est
+  est <- list(terms = terms, model = mf)
+
+  # Store call and formula used
+  est$call <- match.call()
+  est$formula <- formula
+
+  # Store information used for model fit
+  est$X <- X
+  est$y <- y
+  
+  # Fit model (using optim function in r)
+  # Initial guess is just 0
+  est$initial <- rep(0,18)
+  # Function returns -maximum likelihood
+  est$fcn <- function(coeff){
+    return(-y%*%X%*%coeff + sum(exp(X%*%coeff)))
+  }
+  
+  # Use optim function to estimate coefficients
+  est$coefficients = optim(est$initial, est$fcn, method = "BFGS", hessian = TRUE)
+  
+  # We only need to return the coefficients from the regression
+  return(est$coefficients)
+}
+
+# Conduct the regression
+coeff <- myglm(goals~ -1 + X)
+
+# Find relative strength by setting Bodø Glimt to 0
+coeff$par[3:17] = coeff$par[3:17] - coeff$par[18]
+coeff$par[18] = 0
+
+# Create a strength ranking based on the calculated coefficients
+strengthRanking = data.frame(
+  Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
+  Strength = coeff$par[3:18],
+  stringsAsFactors = FALSE)
+
+
+# Sort after strength
+strengthRanking = strengthRanking[order(strengthRanking$Strength, decreasing = T),]
+# Rename rows after sorting
+row.names(strengthRanking) <- seq(1,16)
+
+# Print the strength ranking
+print(strengthRanking)
+# Print intercept and home advantage
+print("Intercept: ")
+print(coeff$par[1])
+print("Home advantage: ")
+print(coeff$par[2])
+
+# Compare with the results from the built in function glm
+summary(glm(goals ~ -1 + X, family = "poisson"))
+
+# Compare the calculated strength ranking with the current standings
+compareableRanking = data.frame(
+  Strength = strengthRanking[,1],
+  Ranking = ranking[,1],
+  stringsAsFactors = FALSE)
+row.names(compareableRanking) <- seq(1,16)
+print(compareableRanking)
+
+# We make a ranking based on goal difference.
+rankingGD = ranking[order(ranking$GD, ranking$For, decreasing = T),]
+# And compare it to the strength ranking.
+compareableRanking2 = data.frame(
+  Strength = strengthRanking[,1],
+  RankingGD = rankingGD[,1],
+  stringsAsFactors = FALSE)
+row.names(compareableRanking2) <- seq(1,16)
+print(compareableRanking2)
+
+# Load the unplayed matches
+filepath <- "https://www.math.ntnu.no/emner/TMA4315/2018h/unplayed2018"
+eliteserieUnplayed <- read.table(file = filepath, header = TRUE, colClasses = c("character", 
+    "character"))
+
+# Add columns for goals in each match
+eliteserieUnplayed$yh = rep(0,dim(eliteserieUnplayed)[1])
+eliteserieUnplayed$ya = rep(0,dim(eliteserieUnplayed)[1])
+
+# Initialize list to store final rankings
+fotball <- list()
+
+# Function to simulate one season
+simseason <- function(){
+  
+  #Play the remaining matches
+  eliteserieUnplayed[,3] = rpois(dim(eliteserieUnplayed)[1],exp(coeff$par[1]+coeff$par[2] + strengthRanking[match(eliteserieUnplayed[,1], strengthRanking$Team),2] - strengthRanking[match(eliteserieUnplayed[,2], strengthRanking$Team),2]))
+  eliteserieUnplayed[,4] = rpois(dim(eliteserieUnplayed)[1],exp(coeff$par[1] - strengthRanking[match(eliteserieUnplayed[,1], strengthRanking$Team),2] + strengthRanking[match(eliteserieUnplayed[,2], strengthRanking$Team),2]))
+  
+  # Make the final ranking by starting with the matches already played
+  rankingFinal <- ranking
+  # Each team will play 30 times
+  rankingFinal$Played = rep(30,16)
+  
+  for (i in 1:dim(eliteserieUnplayed)[1]){
+    # Add goals for and against home team
+    rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),6] = rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),6] + eliteserieUnplayed[i,3]
+    rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),7] = rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),7] + eliteserieUnplayed[i,4]
+    # and for and against away team
+    rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),6] = rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),6] + eliteserieUnplayed[i,4]
+    rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),7] = rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),7] + eliteserieUnplayed[i,3]
+  
+    # Then count wins, draws and losses for home team
+    rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),3] = rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),3] + as.numeric(eliteserieUnplayed[i,3]>eliteserieUnplayed[i,4])
+    rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),4] = rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),4] + as.numeric(eliteserieUnplayed[i,3]==eliteserieUnplayed[i,4])
+    rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),5] = rankingFinal[match(eliteserieUnplayed[i,1], rankingFinal[,1]),5] + as.numeric(eliteserieUnplayed[i,4]>eliteserieUnplayed[i,3])
+  
+    # Finally count wins, draws and losses for away team
+    rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),3] = rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),3] + as.numeric(eliteserieUnplayed[i,3]<eliteserieUnplayed[i,4])
+    rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),4] = rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),4] + as.numeric(eliteserieUnplayed[i,3]==eliteserieUnplayed[i,4])
+    rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),5] = rankingFinal[match(eliteserieUnplayed[i,2], rankingFinal[,1]),5] + as.numeric(eliteserieUnplayed[i,4]<eliteserieUnplayed[i,3])
+  }
+  # Points is computed by 3 points for win, 1 for draw and 0 for loss
+  rankingFinal[,9] = 3*rankingFinal[,3] + rankingFinal[,4]
+  # Goal difference is goals scored minus goals conceded
+  rankingFinal[,8] = rankingFinal[,6] - rankingFinal[,7]
+  # We rank the teams first by points, then goal difference, finally by goals scored
+  rankingFinal = rankingFinal[order(rankingFinal$Points, rankingFinal$GD, rankingFinal$For, decreasing = T),]
+  # Rename rows after sorting
+  row.names(rankingFinal) <- seq(1,16)
+  return(rankingFinal)
+}
+
+# To reproduce results
+set.seed(4315)
+# Simulate the remaining games 1000 times
+# for (i in 1:1000){
+#  fotball[[i]] <- simseason()
+# }
+
+# Save the data
+#saveRDS(fotball, file = "Simulering.rds")
+
+# Load the data
+data = readRDS(file = "Simulering.rds")
+
+# Initialize ranking table with average rankings
+rankingAverage <- data.frame(
+    Team = c("Rosenborg", "Molde", "Lillestroem", "Odd", "Haugesund", "Sandefjord_Fotball", "Ranheim_TF", "Brann", "Sarpsborg08", "Stabaek", "Tromsoe", "Start", "Vaalerenga", "Kristiansund", "Stroemsgodset", "BodoeGlimt"),
+    Played = 30, Won = 0, Drawn = 0, Lost = 0, For = 0, Against = 0, GD = 0, Points = 0,
+    stringsAsFactors = FALSE)
+
+#Number of times each team placed in each place
+numPlace = data.frame(
+  Team = c("Rosenborg", "Brann", "Molde", "Haugesund", "Ranheim_TF", "Vaalerenga", "Odd", "Tromsoe", "Sarpsborg08", "Kristiansund", "Stroemsgodset", "BodoeGlimt", "Lillestroem", "Stabaek", "Start", "Sandefjord_Fotball"),
+    One = 0, Two = 0, Three = 0, Four = 0, Five = 0, Six = 0, Seven = 0, Eight = 0, Nine = 0, Ten = 0, Eleven = 0, Twelve = 0, Thirteen = 0, Fourteen = 0, Fifteen = 0, Sixteen = 0,
+    stringsAsFactors = FALSE)
+
+# Initialize list of placings for each team
+placings = data.frame(Rosenborg = rep(0,1000), Brann = 0, Molde = 0, Haugesund = 0, Ranheim_TF = 0, Vaalerenga = 0, Odd = 0, Tromsoe = 0, Sarpsborg08 = 0, Kristiansund = 0, Stroemsgodset = 0, BodoeGlimt = 0, Lillestroem = 0, Stabaek = 0, Start = 0, Sandefjord_Fotball = 0)
+
+# Initialize list of points for each team
+points = data.frame(Rosenborg = rep(0,1000), Brann = 0, Molde = 0, Haugesund = 0, Ranheim_TF = 0, Vaalerenga = 0, Odd = 0, Tromsoe = 0, Sarpsborg08 = 0, Kristiansund = 0, Stroemsgodset = 0, BodoeGlimt = 0, Lillestroem = 0, Stabaek = 0, Start = 0, Sandefjord_Fotball = 0)
+
+# List the place for each team in each simulation
+# List the points for each team in each simulation
+# And calculate number of times each team placed in each place:
+# Average the final ranking over all the simulations:
+for (i in 1:1000){
+  cur = data[[i]]
+  for (j in 1:16){
+    # Add the placing of each team
+    placings[i,match(cur[j,1],colnames(placings))] = j
+    # Add the points of each team
+    points[i,match(cur[j,1],colnames(points))] = cur[j,9]
+    # Find number of placings for each team
+    numPlace[match(cur[j,1], numPlace[,1]),j+1] = numPlace[match(cur[j,1], numPlace[,1]),j+1] + 1
+    # Average the final ranking
+    rankingAverage[match(cur[j,1], rankingAverage[,1]),3:9] = rankingAverage[match(cur[j,1], rankingAverage[,1]),3:9] + cur[j,3:9]/1000
+  }
+}
+
+# Sort the table in the right order
+rankingAverage = rankingAverage[order(rankingAverage$Points, rankingAverage$GD, rankingAverage$For, decreasing = T),]
+# Rename rows after sorting
+row.names(rankingAverage) <- seq(1,16)
+
+# Round to 1 decimal
+rankingAverage[,2:9] = round(rankingAverage[,2:9],1)
+
+print(rankingAverage)
+
+# Print number of placings for each team
+print(numPlace)
+
+library("ggplot2")
+library("reshape2")
+# Plot the placings of each team in a barchart
+placingsplot <- melt(placings)
+ggplot(placingsplot, aes(x = value)) + geom_bar() + facet_wrap(~variable)
+
+# Plot the points of each team in a histogram
+pointsplot <- melt(points)
+ggplot(pointsplot, aes(x = value)) + geom_histogram() + facet_wrap(~variable)
+
+# Initialize data frame to store confidence intervals
+confidence_intervals = data.frame(
+  Teams = numPlace$Team, # All the teams
+  mean = 0,
+  sd = 0,
+  low = 0,
+  high = 0,
+  stringsAsFactors = FALSE)
+
+for (i in 1:16){
+  confidence_intervals$mean[i] = mean(points[[i]])
+  confidence_intervals$sd[i] = sd(points[[i]])
+  confidence_intervals$low[i] = confidence_intervals$mean[i] - confidence_intervals$sd[i]*1.645
+  confidence_intervals$high[i] = confidence_intervals$mean[i] + confidence_intervals$sd[i]*1.645
+  }
+
+# Round all values
+confidence_intervals[,2:5] = round(confidence_intervals[,2:5],1)
+
+print(confidence_intervals)
+
+# Plot boxplot of points for each team to compare points of each team
+boxplot(points)
+```
