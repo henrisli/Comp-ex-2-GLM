@@ -109,9 +109,7 @@ $$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol
 We denote $c_jj$ for diagonal element $j$ of $F^{-1}(\hat{\boldsymbol \beta})$ and get that for each coefficient $\beta_j$,
 $$\frac{\beta_j - \hat{\beta_j}}{\sqrt{c_{jj}}} \sim N(0,1).$$
 We can test the significance of the $\beta_j$ using the test statistics 
-$$ 
-z_j = \frac{\hat{\beta}_j - 0}{\sqrt{c_{jj}}}.
-$$
+$$ z_j = \frac{\hat{\beta}_j - 0}{\sqrt{c_{jj}}}.$$
 
 We read the values of the test statistics from the summary above, and get $z_0 = 12.861, z_1 = -11.521, z_2 = -3.821$. This gives p-values of $p_0 < 2\cdot 10^{-16}, p_1 < 2 \cdot 10^{-16}, p_2 = 0.000133$. All these p-values are below any reasonable significance level, so we reject the null-hypothesis for all parameters. This means that all the parameters are significant. 
 
@@ -128,8 +126,7 @@ cat("deviance: ", D)
 cat("p-value: ", 1 - pchisq(D,110))
 ```
 
-Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model.
-**SE LITT MER PÅ DENNE DELEN SENERE**
+Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model. The model could be improved if we included additional covariates, e.g. weather, amount of avalanches, "fitness" of climber, etc.
 
 Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Or equivalently
 $$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
