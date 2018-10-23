@@ -158,13 +158,13 @@ ggplot(df, aes(x = fitted, y = dres, size = observations)) + geom_point()
 
 The dots indicate a single covariate pattern (here a mountain or several mountains with identical height and prominence). The $x$-axis indicate the fitted probability of ascent success while the $y$-axis indicate the deviance residual. The size of the dots indicate the amount of observations (both failed and successful attempts). 
 
-We see some indication of a larger spread of the residuals towards higher probabilities and some non-centering around lower probabilites, but observe no obvious structure. 
+We see some indication of a larger spread of the residuals towards higher probabilities and some non-centering around lower probabilites, but observe no obvious structure. We investigate whether either of these trends are associated with a particular covariate by plotting the residuals as a function of `height` and `prominence`.
 
 ```{r}
 ggplot(df, aes(x = height, y = dres, size = observations)) + geom_point()
 ```
 
-The $x$-axis now indicates height. We see some larger spread at at lower altitudes, but also that the covariate patterns at lower altitudes have a smaller amount of observations. Beyond that we see no apparent structure in the data. 
+The $x$-axis now indicates height. We see some larger spread at at lower altitudes, but note that there are only a small amount of summits with height above 8000m and it is quite natural to observe fewer outliers. We also observe a slight tendency towards negative residuals at greater altitudes with the exception of the two highest summits. This might indicate that there is some covariate that separates the summits above 8km. This further supports our claim that the model can be improved with the inclusion of additional covariate, e.g. eg some measure of summit infrastructure (amount of base camps).
 
 ```{r}
 ggplot(df, aes(x = prominence, y = dres, size = observations)) + geom_point()
@@ -172,7 +172,7 @@ ggplot(df, aes(x = prominence, y = dres, size = observations)) + geom_point()
 
 The $x$-axis now indicates prominence. We see no apparent structure inn the data. 
 
-Structure in the data would indicate that our model assumptions are unreasonable, and an obvious trend would enable us to discard the model. However, the lack of structure does not necessarily indicate that our model is good. It will therefore be important to validate the model predictions using observations excluded from the model data. 
+Structure in the data would indicate that our model assumptions are unreasonable, and an obvious trend would motivate us to discard our model. However, the lack of structure does not necessarily indicate that our model is good. It will therefore be important to validate the model predictions using observations excluded from the model data. 
 
 ```{r, echo = F, eval = T}
 height = rep(seq(min(mount$height), max(mount$height), length.out = 100), each = 100)
@@ -181,6 +181,7 @@ prominence = rep(seq(min(mount$prominence), max(mount$prominence), length.out = 
 df2 = data.frame(fitted = exp(fit$coefficients[1] + fit$coefficients[2]*height + fit$coefficients[3]*prominence)/(1+exp(fit$coefficients[2]*height+fit$coefficients[3]*prominence+fit$coefficients[1])), height = height, prominence = prominence)
 ggplot(df2, aes(x = height, y = prominence, fill = fitted)) + geom_raster() + geom_contour(aes(z = fitted)) + scale_fill_gradientn(colours = terrain.colors(10)) + labs(x = "height", y = "prominence")
 ```
+
 We plot the predicted probability of ascent success (marked by color) as a function of `height` and `prominence`. The probability decreases with increasing `height` and `prominence`. The linear level curves are indicated by blue lines. We observe that the level curves are steep, indicating that `height` has a stronger model effect than `prominence`. This makes sense, as 
 $$ \frac{\hat{\beta}_{height}}{\hat{\beta}_{prominence}} = 9.4$$
 
