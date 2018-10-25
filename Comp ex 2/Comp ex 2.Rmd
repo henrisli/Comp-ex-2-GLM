@@ -9,7 +9,7 @@ output:
     toc_depth: 2
     toc_float: yes
 date: "`r format(Sys.time(), '%d.%m.%Y')`"
-subtitle: 'Group XX: Henrik Syversveen Lie, Mikal Stapnes, Oliver Byhring'
+subtitle: 'Group 7: Henrik Syversveen Lie, Mikal Stapnes, Oliver Byhring'
 ---
 
 
@@ -26,7 +26,7 @@ opts_chunk$set(tidy.opts = list(width.cutoff = 68), tidy = TRUE, warning = FALSE
 
 We let $y_i$ be the number of successfull ascents, and $n_i$ be the total number of attempts (success + fail) of the i'th mountain. We then do binary regression with the logit link to model the probability of success. This gives
 
-1. Model for response: $Y_i \sim \text{Bin}(n_i,\pi_i), \quad \text{for } i = 1,\dots,113$, with $\text{E}(Y_i) = \mu_i = \pi_i$ and $\text{Var}(Y_i) = \pi_i(1-\pi_i)$
+1. Model for response: $Y_i \sim \text{Bin}(n_i,\pi_i)$ for $i = 1,\dots,113$, with $\text{E}(Y_i) = \mu_i = n_i\pi_i$ and $\text{Var}(Y_i) = n_i\pi_i(1-\pi_i)$
 2. Linear predictor: $\eta_i = {\bf x} _i^T \boldsymbol \beta$
 3. Link function: $\eta_i = \ln\big(\frac{\pi_i}{1-\pi_i}\big)$, also known as logit link
 
