@@ -34,44 +34,43 @@ where ${\bf x}_i$ is a $p$ dimensional column vector of covariates for observati
 
 Then, the likelihood can be written
 
-$$L(\boldsymbol \beta)= \prod_{i=1}^n L_i(\boldsymbol\beta) = \prod_{i=1}^n f(y_i;\boldsymbol\beta) = \prod_{i=1}^n\pi_i^{y_i}(1-\pi_i)^{n_i-y_i}.$$
+$$L(\boldsymbol \beta)= \prod_{i=1}^G L_i(\boldsymbol\beta) = \prod_{i=1}^G f(y_i;\boldsymbol\beta) = \prod_{i=1}^G{n_i \choose y_i} \pi_i^{y_i}(1-\pi_i)^{n_i-y_i}.$$
 
 If we take the natural logarithm, we get the log likelihood function
 
 $$
-l(\boldsymbol \beta) = \ln(L(\boldsymbol \beta)) = \sum_{i=1}^n l_i(\boldsymbol \beta) \\= \sum_{i=1}^n [y_i \ln(\pi_i)+(n_i-y_i)\ln(1-\pi_i)]
- = \sum_{i=1}^n [y_i \ln\big(\frac{\pi_i}{1-\pi_i}\big)+n_i \ln(1-\pi_i)]
+l(\boldsymbol \beta) = \ln(L(\boldsymbol \beta)) = \sum_{i=1}^G l_i(\boldsymbol \beta) \\= \sum_{i=1}^G [y_i \ln(\pi_i)+(n_i-y_i)\ln(1-\pi_i) + \ln{n_i \choose y_i}]
+ = \sum_{i=1}^G [\ln{n_i \choose y_i} + y_i \ln\big(\frac{\pi_i}{1-\pi_i}\big)+n_i \ln(1-\pi_i)]
 $$
 
 To express the log likelihood as a function of $\boldsymbol \beta$ we first use the link between $\eta_i$ and $\pi_i$. We use the response function $h(\eta) = g^{-1}(\eta)$, which is the inverse of the link function. $\pi_i = h(\eta_i) = \frac{\exp(\eta_i)}{1+\exp(\eta_i)}$. The log-likelihood function can then be written:
 
 $$
-l(\boldsymbol \beta) = \sum_{i=1}^n[y_i\eta_i+n_i \ln\big(\frac{1}{1+\exp(\eta_i)}\big)]
-= \sum_{i=1}^n[y_i\eta_i-n_i \ln(1+\exp(\eta_i))].
+l(\boldsymbol \beta) = \sum_{i=1}^G[\ln{n_i \choose y_i} + y_i\eta_i+n_i \ln\big(\frac{1}{1+\exp(\eta_i)}\big)]
+= \sum_{i=1}^G[\ln{n_i \choose y_i} + y_i\eta_i-n_i \ln(1+\exp(\eta_i))].
 $$
 
 Finally we use that $\eta_i = {\bf x}_i^T \boldsymbol \beta$ and get
 
 $$
-l(\boldsymbol \beta)=\sum_{i=1}^n[y_i {\bf x}_i^T \boldsymbol \beta - n_i \ln(1+\exp({\bf x}_i^T \boldsymbol \beta)],
+l(\boldsymbol \beta)=\sum_{i=1}^G[\ln{n_i \choose y_i} + y_i {\bf x}_i^T \boldsymbol \beta - n_i \ln(1+\exp({\bf x}_i^T \boldsymbol \beta)],
 $$
 
 which is an expression for the log likelihood as a function of beta.
 
-Since we know that this function is concave we can find the parameters, $\boldsymbol \beta$ that gives the maximum likelihood by taking the partial derivatives with respect to $\boldsymbol \beta$ to get the score function, 
+Since we know that this function is concave we can find the parameters, $\boldsymbol \beta$ that gives the maximum likelihood by taking the partial derivatives with respect to $\boldsymbol \beta$ to get the score function,
 
 $$
-\boldsymbol s(\boldsymbol \beta) = \frac{\partial l(\boldsymbol \beta)}{\partial \boldsymbol\beta} = \sum_{i=1}^n y_i x_i - n_i \frac{x_i \exp{\mathbf{x}_i^T \boldsymbol \beta}}{1 + \exp{\mathbf{x}_i^T \boldsymbol \beta}}.
+\boldsymbol s(\boldsymbol \beta) = \frac{\partial l(\boldsymbol \beta)}{\partial \boldsymbol\beta} = \sum_{i=1}^G \big[y_i x_i - n_i \frac{x_i \exp{\mathbf{x}_i^T \boldsymbol \beta}}{1 + \exp{\mathbf{x}_i^T \boldsymbol \beta}}\big].
 $$
 The parameters $\boldsymbol \beta$ that gives the maximum likelihood is those for which the score function equals the zero-vector.
 
 $$
 \boldsymbol s(\boldsymbol \beta) = \frac{\partial l (\boldsymbol \beta)}{\partial \boldsymbol \beta} = \boldsymbol 0.
 $$
-Which can be found iteratively by letting $n \rightarrow \infty$
-$$
-\boldsymbol \beta_{n+1} = \boldsymbol \beta_n + F^{-1}(\boldsymbol \beta_n) \boldsymbol s(\boldsymbol \beta_n)
-$$
+In practice, there is often no closed form solution, which means that we have to use numerical procedures to fin the betas, such as Newton-Raphson or Fisher Scoring. The betas can be found iteratively by the formula
+$$\boldsymbol \beta_{n+1} = \boldsymbol \beta_n + F^{-1}(\boldsymbol \beta_n) \boldsymbol s(\boldsymbol \beta_n),$$
+where $F^{-1}(\beta_n)$ is the inverse of the expected Fisher information.
 
 ## b)
 We load the dataset and fit a model as described in Part a) with success rate
