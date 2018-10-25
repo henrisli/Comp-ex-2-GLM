@@ -100,7 +100,7 @@ $$
 
 The left hand side is what we call the odds. If we now increase covariate $j$ by one unit and keep the other constant, the odds will be multiplied by $\exp(\beta_j)$. Coefficient estimates for both height and prominence are negative. This means that for both coefficients $\exp(\beta_j) < 1$, and an increase in `height` or `prominence` will give a decrease in the odds and thus a decrease in success probability of climbing the mountain. For example, increasing `height` by one meter will decrease the odds by multiplying it with $\exp(\beta_1) = \exp(-0.001635) = 0.998$.
 
-We can interpret the intercept in the following way. For a mountain with zero height, and zero prominence, the odds of climbing it will be $\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) = \exp(13.685845) = 878389$, or $\pi_i \simeq 1$. Although the intercept in this case is just theoretical (there would be no point in climbing a mountain of zero height), it makes sense because climbing a mountain of zero height should have probability 1.
+We can interpret the intercept in the following way. For a mountain with zero height, and zero prominence, the odds of climbing it will be $\frac{\pi_i}{1-\pi_i} = \exp(\beta_0) = \exp(13.685845) = 878389$, or $\pi_i \simeq 1$. Although the intercept in this case is just theoretical (there would be no point in climbing a mountain of zero height), it makes sense because climbing a mountain of zero height should have success probability 1.
 
 Now we want to discuss the significance of the parameters. We do a Wald-test for each of the parameters. The Wald-test has hypotheses
 $$\text{H}_0 : \beta_j = 0 \quad \text{vs.} \quad \text{H}_1: \beta_j \neq 0.$$
@@ -128,10 +128,7 @@ cat("p-value: ", 1 - pchisq(D,110))
 
 Because the p-value is below any reasonable signifiance level, we reject the null-hypothesis. So our candidate model does not fit the data well. Although all the parameters are significant, this test indicates that we haven't included enough parameters to make a good model. The model could be improved if we included additional covariates, e.g. weather, amount of avalanches, "fitness" of climber, etc.
 
-Asymptotically, the parameter estimates are normally distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, or the inverse of the expected Fisher information matrix evaluated at the ML estimate. Or equivalently
-$$\hat{\boldsymbol \beta} \approx N_p(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})).$$
-
-As mentioned in the Wald-test. The parameteres are asymptotically normal with mean $\beta$ and variance $c_{jj}$. The `r` printout gives us the coefficient estimates and the estimated standard deviation $\sqrt{c_{jj}}$, of parameter $j$. From this which we can construct a confidence interval. We can make a $95 \%$ confidence interval for the height parameter $\beta_{\text{height}}$. We have $95\%$ confidence that
+As mentioned in the previous paragraph about the Wald-test, the parameters are each asymptotically normal with mean $\beta$ and variance $c_{jj}$. The `r` printout gives us the coefficient estimates and the estimated standard deviation $\sqrt{c_{jj}}$ of parameter $j$. From this we can construct a confidence interval. We can make a $95 \%$ confidence interval for the height parameter $\beta_{\text{height}}$ in the following way
 $$\beta_{\text{height}} \in \big[\hat{\beta}_{\text{height}} - z_{0.025}\sqrt{c_{jj}}, \ \hat{\beta}_\text{height} + z_{0.025}\sqrt{c_{jj}}\big],$$
 where $\sqrt{c_{jj}}$ can be read off as the standard deviation of the height parameter. Inserting values from the `r` printout, we get
 $$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 1.96\cdot 0.000142\big] = \big[-0.00191332, \ -0.00135668\big] = \big[\hat{\beta}_L,\hat{\beta}_H\big].$$
@@ -139,7 +136,7 @@ $$\beta_{\text{height}} \in \big[-0.001635 - 1.96 \cdot 0.000142, \ -0.001635 + 
 Finally we can take the $\exp(\cdot)$ function of both limits of the interval, and we get that
 $$\exp(\beta_{\text{height}}) \in \big[\exp(\hat{\beta}_L),\exp(\hat{\beta}_H)\big] = \big[0.9981,0.9986 \big].$$
 
-In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95\%$ confidence that an increase in height of 1 meter means that the odds will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$.
+In this way, we have found a $95 \%$ confidence interval for $\exp(\beta_{\text{height}})$. This means that we can say with $95\%$ confidence that an increase in height of 1 meter means that the odds will be multiplied by $\exp(\beta_{\text{height}}) \in \big[0.9981,0.9986 \big]$. This is intuitive, because a higher mountain should in theory be harder to climb.
 
 ## c)
 
@@ -211,11 +208,12 @@ And we transform the linear predictors to probabilites using the response functi
 exp(limits[,2])/(1+ exp(limits[,2]))
 ```
 
-We also want to make a $95 \%$ confidence interval for the probability of successfully ascending both summits. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta})$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
-$$\widehat{LP}=\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i F^{-1}(\hat{\boldsymbol \beta})x_i^T).$$
+We also want to make a $95 \%$ confidence interval for the probability of successfully ascending both summits. We use the fact that the coefficients found by maximum likelihood asymptotically will be normal distributed with mean $\boldsymbol \beta$ and variance $F^{-1}(\hat{\boldsymbol \beta})$, $\hat{\boldsymbol \beta} \sim N(\boldsymbol \beta, F^{-1}(\hat{\boldsymbol \beta}))$. We then get that the linear predictor, a linear combination of the parameters $\beta_j$, is also normal distributed,
+$$\widehat{LP}=\hat{\beta}_0 + x_{i1} \hat{\beta}_1 + x_{i2} \hat{\beta}_2 = x_i^T \hat{\boldsymbol \beta} \sim N_1(x_i^T \beta, x_i^T F^{-1}(\hat{\boldsymbol \beta})x_i).$$
 Which we can use to calculate the confidence intervals for the linear predictor $\eta_i$. We can then transform the linear predictor CI to the corresponding probability CI and get an interval for ascent success probability for Mount Everest and Chogolisa.
 As the estimated linear predictor is normally distributed, we get that
-$$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1).$$
+$$\frac{LP - \widehat{LP}}{\widehat{sd(LP)}} \sim N(0,1),$$
+
 
 We can then make a $95 \%$ confidence interval for the linear predictor, which will be
 $$LP \in \big[\widehat{LP} - z_{0.025}\cdot \widehat{sd(LP)}, \ \widehat{LP} + z_{0.025}\cdot \widehat{sd(LP)}\big].$$
@@ -287,7 +285,7 @@ print(contingency)
 ```
 
 We then want to test if the number of goals for home and away team are independent. We do this by conducting _Pearson's_ $\chi^2$ _test_ on the contingency table. The test poses the following hypotheses
-$$H_0: \text{The sampling distributions are independently chi-squared distributed},\\ H_1: \text{They are not independently chi-squared distributed}.$$
+$$H_0: \text{The home and away goals are independent},\quad H_1: \text{They are not independent}.$$
 
 We use the `R` function `chisq.test()` to compute the test statistic and the corresponding p-value.
 ```{r, echo = F, eval = T}
